@@ -1,0 +1,8 @@
+TITLE = "2D Porous media"
+# This file is used to define 2D porous media.
+# X0, Y0, XMAX, YMAX for boundary of porous media;
+# PNUM for particle number;
+# PD for diameter of particle;
+# PHI for porosity;
+X0    Y0    XMAX    YMAX    PNUM    PD
+0.0,  0.0,  20.0,   4.0,    100,    0.2
