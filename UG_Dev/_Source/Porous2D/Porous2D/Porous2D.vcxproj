@@ -176,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\GlobalParameters.h" />
+    <ClInclude Include="include\UG-Dev\HuNXOpen.h" />
     <ClInclude Include="include\Voronoi\BeachLine.h" />
     <ClInclude Include="include\Voronoi\Cell.h" />
     <ClInclude Include="include\Voronoi\CircleEventQueue.h" />

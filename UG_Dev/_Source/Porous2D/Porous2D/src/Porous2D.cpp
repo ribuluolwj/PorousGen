@@ -198,6 +198,23 @@ void Porous2D::initialize_cb()
         enumGenMethod = dynamic_cast<NXOpen::BlockStyler::Enumeration*>(theDialog->TopBlock()->FindBlock("enumGenMethod"));
         toggleMeshRandom = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleMeshRandom"));
         groupSize = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSize"));
+        tabControl1 = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControl1"));
+        tabPage2 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage2"));
+        expressionFaceLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceLength"));
+        expressionFaceWidth = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceWidth"));
+        expressionParticleSize = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionParticleSize"));
+        tabPage3 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage3"));
+        expressionBasisWeight = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionBasisWeight"));
+        expressionDryContentFinal = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentFinal"));
+        expressionDryContentNow = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentNow"));
+        expressionSheetLen = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionSheetLen"));
+        tabPage4 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage4"));
+        expressionLenDensity = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenDensity"));
+        expressionCelLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelLength"));
+        expressionCelDiameter = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelDiameter"));
+        expressionLenWidRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenWidRatio"));
+        togglePaper = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePaper"));
+        expressionComRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionComRatio"));
         expressionFaceLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceLength"));
         expressionFaceWidth = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceWidth"));
         expressionParticleSize = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionParticleSize"));
@@ -219,6 +236,7 @@ void Porous2D::initialize_cb()
         buttonGenSheet = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGenSheet"));
         buttonGenParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGenParticle"));
         buttonTrimParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonTrimParticle"));
+        buttonGen3D = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGen3D"));
         buttonOnekeyGen = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonOnekeyGen"));
         groupSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSet"));
         togglePrintInfo = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePrintInfo"));
@@ -282,30 +300,75 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
 //    NXOpen::ListingWindow* listingWindow;
     try
     {
-        if(block == pointSheetStart)
+        string log = Porous2D::nativeFolderBrowser0->Path().getLocaleText();
+        log = log + "\\log.txt";
+        Porous2D::outf.open(log, ios::app);
+        time_t now = time(0);
+        char* dt = ctime(&now);
+        if (block == pointSheetStart)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
-        else if(block == enumParticleShape)
+        else if (block == enumParticleShape)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
-        else if(block == enumGenMethod)
+        else if (block == enumGenMethod)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
-        else if(block == expressionFaceLength)
+        else if (block == expressionFaceLength)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
-        else if(block == expressionFaceWidth)
+        else if (block == expressionFaceWidth)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
         else if (block == expressionParticleSize)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
 
+        }
+        else if (block == expressionBasisWeight)
+        {
+            //---------Enter your code here-----------
+        }
+        else if (block == expressionDryContentFinal)
+        {
+            //---------Enter your code here-----------
+        }
+        else if (block == expressionDryContentNow)
+        {
+            //---------Enter your code here-----------
+        }
+        else if (block == expressionSheetLen)
+        {
+            //---------Enter your code here-----------
+        }
+        else if(block == expressionLenDensity)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionCelLength)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionCelDiameter)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionLenWidRatio)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == togglePaper)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionComRatio)
+        {
+        //---------Enter your code here-----------
         }
         else if(block == integerParticleNumber)
         {
@@ -346,6 +409,10 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         else if(block == buttonGenSheet)
         {
         //---------Enter your code here-----------
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\tLogTime:" << dt << endl;
+            }
             //--Genarate sheet porous party
             GenPorousSheet(workPart);
         }
@@ -361,15 +428,27 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
             //--Trim sheet to get porous
             TrimPorousSheet(workPart);
         }
+        else if (block == buttonGen3D)
+        {
+        //---------Enter your code here-----------
+            //--Gen 3D porous
+            GenPorous3D(workPart);
+         }
         else if(block == buttonOnekeyGen)
         {
         //---------Enter your code here-----------
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\tLogTime:" << dt << endl;
+            }
             //--Genarate sheet porous party
             GenPorousSheet(workPart);
             //--Create particle boundary curves
             GenParticleCurve(workPart);
             //--Trim sheet to get porous
             TrimPorousSheet(workPart);
+            //--Generage porous 3D
+            GenPorous3D(workPart);
         }
         else if(block == togglePrintInfo)
         {
@@ -383,6 +462,7 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
+        outf.close();
     }
     catch(exception& ex)
     {

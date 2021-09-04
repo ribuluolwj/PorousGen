@@ -105,10 +105,11 @@ public:
     
     //Add for PorousTools addon by RP
     //--Set porous sheet global object
+    NXOpen::NXObject* SheetObject;
     NXOpen::NXObject* porousSheetObject;
     //--Set porous bodys
-    NXOpen::Body* porousBodys;
-    std::vector<NXOpen::Body*> porousBodysCollector;
+    NXOpen::Body* sheetBodys;
+    std::vector<NXOpen::Body*> sheetBodysCollector;
     //--Set AssociativeArc global parameters
     std::vector<NXOpen::NXObject*> particleObject;
     NXOpen::Features::AssociativeArc* arcFeature;
@@ -121,7 +122,9 @@ public:
     //--Set helpPoint used in TrimSheetBodys to get curve feature
     NXOpen::Point3d helpPoint;
     std::vector<NXOpen::Point3d>helpPointCollector;
-
+    //--Set trimsheet body
+    NXOpen::Body* porousBodys2D;
+    std::vector<NXOpen::Body*> porousBodys2DCollector;
 
  //   enum Enumcomp {Clockwise,CounterClockwise};
     int particleNumber;
@@ -131,11 +134,18 @@ public:
 //    class Porous2D::compare {};
     double vertxMinX, vertxMinY;
 
+//    sheet size parameters
+    double sheetLength = 0;
+    double sheetWidth = 0;
+    //Set log file
+    ofstream outf;
+
     void GenPorousSheet(NXOpen::Part* workPart);
     void GenParticleCurve(NXOpen::Part* workPart);
     double GetRandomCoordinate(NXOpen::Part* workPart, string direction);
     int GetRandomNode(NXOpen::Part* workPart, std::string direction);
     void TrimPorousSheet(NXOpen::Part* workPart);
+    void GenPorous3D(NXOpen::Part* workPart);
 
     void GenRandom(NXOpen::Part* workPart);
     void GenSquare(NXOpen::Part* workPart);
@@ -166,9 +176,23 @@ private:
     NXOpen::BlockStyler::Enumeration* enumGenMethod;// Block type: Enumeration
     NXOpen::BlockStyler::Toggle* toggleMeshRandom;// Block type: Toggle
     NXOpen::BlockStyler::Group* groupSize;// Block type: Group
+    NXOpen::BlockStyler::TabControl* tabControl1;// Block type: Tabs Page
+    NXOpen::BlockStyler::Group* tabPage2;
     NXOpen::BlockStyler::ExpressionBlock* expressionFaceLength;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionFaceWidth;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionParticleSize;// Block type: Expression
+    NXOpen::BlockStyler::Group* tabPage3;
+    NXOpen::BlockStyler::ExpressionBlock* expressionBasisWeight;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionDryContentFinal;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionDryContentNow;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionSheetLen;// Block type: Expression
+    NXOpen::BlockStyler::Group* tabPage4;
+    NXOpen::BlockStyler::ExpressionBlock* expressionLenDensity;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionCelLength;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionCelDiameter;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionLenWidRatio;// Block type: Expression
+    NXOpen::BlockStyler::Toggle* togglePaper;// Block type: Toggle
+    NXOpen::BlockStyler::ExpressionBlock* expressionComRatio;// Block type: Expression
     NXOpen::BlockStyler::Group* groupParticle;// Block type: Group
     NXOpen::BlockStyler::TabControl* tabControl;// Block type: Tabs Page
     NXOpen::BlockStyler::Group* tabPage;
@@ -187,66 +211,146 @@ private:
     NXOpen::BlockStyler::Button* buttonGenSheet;// Block type: Button
     NXOpen::BlockStyler::Button* buttonGenParticle;// Block type: Button
     NXOpen::BlockStyler::Button* buttonTrimParticle;// Block type: Button
+    NXOpen::BlockStyler::Button* buttonGen3D;// Block type: Button
     NXOpen::BlockStyler::Button* buttonOnekeyGen;// Block type: Button
     NXOpen::BlockStyler::Group* groupSet;// Block type: Group
     NXOpen::BlockStyler::Toggle* togglePrintInfo;// Block type: Toggle
     NXOpen::BlockStyler::Toggle* toggleWriteFile;// Block type: Toggle
     NXOpen::BlockStyler::FolderSelection* nativeFolderBrowser0;// Block type: NativeFolderBrowser
-    
 };
 
 //Generate porous sheets
 void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
 {
-    //Four points creat plane
-    //Initialize FourPointSurfaceBuilder
-    NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
-    fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
-    //Create set points of surface
-    //----Set setpoint1
-    NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
-    fourPointSurfaceBuilder1->SetPoint1(setPoint1);
-    double x0 = setPoint1->Coordinates().X;
-    double y0 = setPoint1->Coordinates().Y;
-    double z0 = setPoint1->Coordinates().Z;
-    //----Set setpoint2
-    NXOpen::Scalar* scalar21;
-    scalar21 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar22;
-    scalar22 = workPart->Scalars()->CreateScalar(y0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar23;
-    scalar23 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Point* setPoint2 = workPart->Points()->CreatePoint(scalar21, scalar22, scalar23, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    fourPointSurfaceBuilder1->SetPoint2(setPoint2);
-    //----Set setpoint3
-    NXOpen::Scalar* scalar31;
-    scalar31 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar32;
-    scalar32 = workPart->Scalars()->CreateScalar(y0 + expressionFaceWidth->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar33;
-    scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    fourPointSurfaceBuilder1->SetPoint3(setPoint3);
-    //----Set setpoint4
-    NXOpen::Scalar* scalar41;
-    scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar42;
-    scalar42 = workPart->Scalars()->CreateScalar(y0 + expressionFaceWidth->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Scalar* scalar43;
-    scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
-    fourPointSurfaceBuilder1->SetPoint4(setPoint4);
-    //Create surface object
-    NXOpen::NXObject* nXObjectSheet;
-    nXObjectSheet = fourPointSurfaceBuilder1->Commit();
-    //Pass to global parameters
-    //----Get trim taget object
-    Porous2D::porousSheetObject = nXObjectSheet;
-    //----Get trim taget sheet bodies
-    Porous2D::porousBodys = dynamic_cast<NXOpen::Body*>(nXObjectSheet);
-    Porous2D::porousBodysCollector.push_back(Porous2D::porousBodys);
-    //Free memory
-    fourPointSurfaceBuilder1->Destroy();
+    if (Porous2D::togglePaper->Value() == false)
+    {
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t生成片体：普通方式\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成片体：普通方式" << endl;
+        }
+        //Four points creat plane
+        //Initialize FourPointSurfaceBuilder
+        NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
+        fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
+        //Create set points of surface
+        //----Set setpoint1
+        NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
+        fourPointSurfaceBuilder1->SetPoint1(setPoint1);
+        double x0 = setPoint1->Coordinates().X;
+        double y0 = setPoint1->Coordinates().Y;
+        double z0 = setPoint1->Coordinates().Z;
+        //----Set setpoint2
+        NXOpen::Scalar* scalar21;
+        scalar21 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar22;
+        scalar22 = workPart->Scalars()->CreateScalar(y0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar23;
+        scalar23 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint2 = workPart->Points()->CreatePoint(scalar21, scalar22, scalar23, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint2(setPoint2);
+        //----Set setpoint3
+        NXOpen::Scalar* scalar31;
+        scalar31 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar32;
+        scalar32 = workPart->Scalars()->CreateScalar(y0 + expressionFaceWidth->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar33;
+        scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint3(setPoint3);
+        //----Set setpoint4
+        NXOpen::Scalar* scalar41;
+        scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar42;
+        scalar42 = workPart->Scalars()->CreateScalar(y0 + expressionFaceWidth->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar43;
+        scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint4(setPoint4);
+        //Create surface object
+        NXOpen::NXObject* nXObjectSheet;
+        nXObjectSheet = fourPointSurfaceBuilder1->Commit();
+        //Pass to global parameters
+        //----Get trim taget object
+        Porous2D::porousSheetObject = nXObjectSheet;
+        //----Get trim taget sheet bodies
+        Porous2D::sheetBodys = dynamic_cast<NXOpen::Body*>(nXObjectSheet);
+        Porous2D::sheetBodysCollector.push_back(Porous2D::sheetBodys);
+        //Free memory
+        fourPointSurfaceBuilder1->Destroy();
+    }
+    else
+    {
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t生成片体：纸幅方式\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成片体：普通方式" << endl;
+        }
+        //Four points creat plane
+        //Initialize FourPointSurfaceBuilder
+        NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
+        fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
+        //Create set points of surface
+        //----Set setpoint1
+        NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
+        fourPointSurfaceBuilder1->SetPoint1(setPoint1);
+        double x0 = setPoint1->Coordinates().X;
+        double y0 = setPoint1->Coordinates().Y;
+        double z0 = setPoint1->Coordinates().Z;
+        //----Get sheet height
+        Porous2D::sheetWidth = Porous2D::expressionBasisWeight->Value() /1000.0 * Porous2D::expressionDryContentFinal->Value() / 100.0\
+            / (1.0 - Porous2D::doublePorousRatio->Value()) * (1.0 / 1.5e3 + (1.0 - Porous2D::expressionDryContentNow->Value() / 100.0) \
+                / (Porous2D::expressionDryContentNow->Value() / 100.0) / 1e3) * 1000.0;
+        Porous2D::sheetLength = Porous2D::sheetWidth * Porous2D::expressionLenWidRatio->Value();
+        //----Set setpoint2
+        NXOpen::Scalar* scalar21;
+        scalar21 = workPart->Scalars()->CreateScalar(x0 + Porous2D::sheetLength, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar22;
+        scalar22 = workPart->Scalars()->CreateScalar(y0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar23;
+        scalar23 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint2 = workPart->Points()->CreatePoint(scalar21, scalar22, scalar23, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint2(setPoint2);
+        //----Set setpoint3
+        NXOpen::Scalar* scalar31;
+        scalar31 = workPart->Scalars()->CreateScalar(x0 + Porous2D::sheetLength, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar32;
+        scalar32 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar33;
+        scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint3(setPoint3);
+        //----Set setpoint4
+        NXOpen::Scalar* scalar41;
+        scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar42;
+        scalar42 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Scalar* scalar43;
+        scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        fourPointSurfaceBuilder1->SetPoint4(setPoint4);
+        //Create surface object
+        NXOpen::NXObject* nXObjectSheet;
+        nXObjectSheet = fourPointSurfaceBuilder1->Commit();
+        //Pass to global parameters
+        //----Get trim taget object
+        Porous2D::SheetObject = nXObjectSheet;
+        //----Get trim taget sheet bodies
+        Porous2D::sheetBodys = dynamic_cast<NXOpen::Body*>(nXObjectSheet);
+        Porous2D::sheetBodysCollector.push_back(Porous2D::sheetBodys);
+        //Free memory
+        fourPointSurfaceBuilder1->Destroy();
+    }
 }
 
 //Generate particles curves
@@ -357,6 +461,16 @@ void Porous2D::MeshSheet(NXOpen::Part* workPart)
 //Trim sheet to get porous 
 void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
 {
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t剪切片体：\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t剪切片体：" << endl;
+    }
     //Trim sheet to get porous
     //Initialize parameters
     int currentParticleNum = 0;
@@ -368,12 +482,13 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
     trimSheetBuilder1->SetTolerance(0.001);
     trimSheetBuilder1->SetExtendBoundaryObject(true);
     //Set trim taget object
-    trimSheetBuilder1->TargetBodies()->Add(Porous2D::porousBodys);
+    bool added1;
+    added1 = trimSheetBuilder1->TargetBodies()->Add(Porous2D::sheetBodys);
     //Set maintain region referrence point
     NXOpen::Point* point1;
-    point1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
+    point1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
     NXOpen::RegionPoint* regionPoint1;
-    regionPoint1 = workPart->CreateRegionPoint(point1, porousBodys);
+    regionPoint1 = workPart->CreateRegionPoint(point1, Porous2D::sheetBodys);
     trimSheetBuilder1->Regions()->Append(regionPoint1);
     NXOpen::Direction* nullNXOpen_Direction(NULL);
     trimSheetBuilder1->ProjectionDirection()->SetProjectVector(nullNXOpen_Direction);
@@ -382,11 +497,13 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
     section1 = workPart->Sections()->CreateSection(0.00095, 0.001, 0.050000000000000003);
     section1->SetAllowedEntityTypes(NXOpen::Section::AllowTypesOnlyCurves);
     //Set section as TrimSheetBuilder boundary
-    trimSheetBuilder1->BoundaryObjects()->Add(section1);
+    bool added2;
+    added2 = trimSheetBuilder1->BoundaryObjects()->Add(section1);
     //----Set curve collector vector 
     std::vector<NXOpen::IBaseCurve*> curves1(Porous2D::particleNumber);
     std::vector<NXOpen::Arc*> arcSelected(Porous2D::particleNumber);
     std::vector<NXOpen::Spline*> splineSelected(Porous2D::particleNumber);
+    char tempString[256];
     //Set loop
     while (currentParticleNum < Porous2D::particleNumber)
     {
@@ -394,31 +511,99 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
         {
             splineSelected[currentParticleNum] = dynamic_cast<NXOpen::Spline*>(splineFeatureCollector[currentParticleNum]->FindObject("CURVE 1"));
             curves1[currentParticleNum] = splineSelected[currentParticleNum];
+            //----Print process to info window
+            //if (Porous2D::togglePrintInfo->Value() == true)
+            //{
+            //    std::sprintf(tempString, "->\t%d:\tcurveNum:%I64u\tcurveCap:%I64u\n",currentParticleNum,curves1.size(),curves1.capacity());
+            //    UF_UI_write_listing_window(tempString);
+            //}
         }
         else if ((std::string)(enumParticleShape->ValueAsString().GetText()) == "Circle")
         {
-            arcSelected[currentParticleNum] = dynamic_cast<NXOpen::Arc*>(arcFeatureCollector[currentParticleNum]->FindObject("CURVE 1"));
+            arcSelected[currentParticleNum] = dynamic_cast<NXOpen::Arc*>(Porous2D::arcFeatureCollector[currentParticleNum]->FindObject("CURVE 1"));
             curves1[currentParticleNum] = arcSelected[currentParticleNum];
+            //----Print process to info window
+            //if (Porous2D::togglePrintInfo->Value() == true)
+            //{
+            //    std::sprintf(tempString, "->\t%d:\tcurveNum:%I64u\tcurveCap:%I64u\n",currentParticleNum,curves1.size(),curves1.capacity());
+            //    UF_UI_write_listing_window(tempString);
+            //}
         }
         //Update particle number
         currentParticleNum++;
     }
-    section1->AllowSelfIntersection(true);
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        std::sprintf(tempString, "->\tcurveNum:%I64u\n", curves1.size());
+        UF_UI_write_listing_window(tempString);
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\tcurveNum:" << curves1.size() << endl;
+    }
     NXOpen::CurveDumbRule* curveDumbRule1;
     curveDumbRule1 = workPart->ScRuleFactory()->CreateRuleBaseCurveDumb(curves1);
+    section1->AllowSelfIntersection(true);
     //----Set SelectionIntentRule
     std::vector<NXOpen::SelectionIntentRule*> rules1(1);
     rules1[0] = curveDumbRule1;
     //----Add rules to section
     NXOpen::Point3d helpPointOrigin(0.0, 0.0, 0.0);
     section1->AddToSection(rules1, nullNXOpen_NXObject, nullNXOpen_NXObject, nullNXOpen_NXObject, helpPointOrigin, NXOpen::Section::ModeCreate, false);
+    trimSheetBuilder1->ProjectionDirection()->SetProjectVector(nullNXOpen_Direction);
     //Trim sheet
     NXOpen::NXObject* nXObjectTrimPorousSheet;
     nXObjectTrimPorousSheet = trimSheetBuilder1->Commit();
+    //Pass to global parameters
+    //----Get porous2D taget object
+    Porous2D::porousSheetObject = nXObjectTrimPorousSheet;
+    //----Get trim taget sheet bodies
+    Porous2D::porousBodys2D = dynamic_cast<NXOpen::Body*>(nXObjectTrimPorousSheet);
+    Porous2D::porousBodys2DCollector.push_back(Porous2D::porousBodys2D);
     //Free memory
     trimSheetBuilder1->Destroy();
 }
 
+//Generate 3D porous medium
+void Porous2D::GenPorous3D(NXOpen::Part* workPart)
+{
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        char tempString[256];
+        UF_UI_write_listing_window("->\t生成3D介质：\n");
+        std::sprintf(tempString, "->\t拉伸长度:%f (mm)\n", Porous2D::expressionSheetLen->Value());
+        UF_UI_write_listing_window(tempString);
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t生成3D介质：" << endl;
+        Porous2D::outf << "->\t拉伸长度:" << Porous2D::expressionSheetLen->Value() << " (mm)" << endl;
+    }
+    //Create thickenBuilder to sheet
+    NXOpen::Features::Feature *nullNXOpen_Features_Feature(NULL);
+    NXOpen::Features::ThickenBuilder *thickenBuilder1;
+    thickenBuilder1 = workPart->Features()->CreateThickenBuilder(nullNXOpen_Features_Feature);
+    thickenBuilder1->SetTolerance(0.001);
+    thickenBuilder1->RegionToPierce()->SetDistanceTolerance(0.001);
+    thickenBuilder1->RegionToPierce()->SetChainingTolerance(0.00095);
+    //----Find Journalldentifier of sheet body
+    NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+    NXOpen::Body *body1(dynamic_cast<NXOpen::Body *>(workPart->Bodies()->FindObject(sheetID)));
+    NXOpen::FaceBodyRule *faceBodyRule1;
+    faceBodyRule1 = workPart->ScRuleFactory()->CreateRuleFaceBody(body1);
+    std::vector<NXOpen::SelectionIntentRule *> rules1(1);
+    rules1[0] = faceBodyRule1;
+    thickenBuilder1->FaceCollector()->ReplaceRules(rules1, false);
+    //----Set distance to thicken
+    thickenBuilder1->FirstOffset()->SetValue(Porous2D::expressionSheetLen->Value());
+    NXOpen::NXObject *nXObjectThickenSheet;
+    nXObjectThickenSheet = thickenBuilder1->Commit();
+    thickenBuilder1->Destroy();
+}
 //------------------------------------------------------------------------------
 
 //Generate random form porous
@@ -598,7 +783,7 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
                 scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                 NXOpen::Point* circleCorePoint1;
                 circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                centerPointCollector.push_back(circleCorePoint1);
+                Porous2D::centerPointCollector.push_back(circleCorePoint1);
                 //Set AssociativeArcBuilder parameters
                 //----Create helpPoints for trim section
                 Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
@@ -647,41 +832,121 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
     //Judge particle shape
     if ((std::string)(Porous2D::enumParticleShape->ValueAsString()).GetText() == "Circle")
     {
-        //----Get sheet start point's coordinate
-        NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
-        double x0 = setPoint1->Coordinates().X;
-        double y0 = setPoint1->Coordinates().Y;
-        double z0 = setPoint1->Coordinates().Z;
-        //----Get sheet center point's coordinate
-        double xSheetCenter = setPoint1->Coordinates().X + Porous2D::expressionFaceLength->Value() / 2.0;
-        double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::expressionFaceWidth->Value() / 2.0;
-        double zSheetCenter = setPoint1->Coordinates().Z;
-        //----Get porous zone boundary start point coordinary
-        NXOpen::Point* pointPorousZoneStart;
-        double xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-        double yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-        double zZoneStart = zSheetCenter;
-        double zoneLength = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
-        //----Define local parameters
-        double ratio = Porous2D::doublePorousRatio->Value();
-        double diameter = Porous2D::expressionParticleSize->Value();
-        //----Compute colum of particle hexagon
-        int rowHexagon = floor(sqrt(zoneLength * zoneLength * (1.0 - ratio) * 4.0 / PI / (diameter * diameter)));
-        Porous2D::particleNumber = rowHexagon * rowHexagon;
-        double gap = 2.0 * zoneLength / (2.0 * (double)rowHexagon + 1.0) - diameter;
-        double boderGap = gap / 2.0;
-        double extraBoderGap = (diameter + gap) * ((2.0 - sqrt(3.0)) * rowHexagon / 2.0 + (sqrt(3.0) - 1.0) / 2.0) / 2.0;
-        //Generate circle particle curves
-        //Judge hexagon direction
-        if (Porous2D::expressionFaceLength->Value() <= Porous2D::expressionFaceWidth->Value())
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
         {
-            //Compute start point coordination
-            double xStartPoint = xZoneStart + boderGap + diameter / 2.0;
-            double yStartPoint = yZoneStart + boderGap + extraBoderGap + diameter / 2.0;
+            UF_UI_write_listing_window("->\t生成颗粒：六边形阵列 | 圆形颗粒\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成颗粒：六边形阵列 | 圆形颗粒" << endl;
+        }
+        //Judge generation method
+        if (Porous2D::togglePaper->Value() == true)
+        {
+            //----Print process to info window
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                UF_UI_write_listing_window("->\t------------------纸幅专用生成方式------------------\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t------------------纸幅专用生成方式------------------" << endl;
+            }
+            //----Get sheet start point's coordinate
+            NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
+            double x0 = setPoint1->Coordinates().X;
+            double y0 = setPoint1->Coordinates().Y;
+            double z0 = setPoint1->Coordinates().Z;
+            //----Get sheet height
+            if (Porous2D::sheetWidth == 0)
+            {
+                Porous2D::sheetWidth = Porous2D::expressionBasisWeight->Value() /1000.0 * Porous2D::expressionDryContentFinal->Value() / 100.0\
+                    / (1.0 - Porous2D::doublePorousRatio->Value()) * (1.0 / 1.5e3 + (1.0 - Porous2D::expressionDryContentNow->Value() / 100.0) \
+                        / (Porous2D::expressionDryContentNow->Value() / 100.0) / 1e3) * 1000.0;
+                Porous2D::sheetLength = Porous2D::sheetWidth * Porous2D::expressionLenWidRatio->Value();
+            }
+            //----Get sheet center point's coordinate
+            double xSheetCenter = setPoint1->Coordinates().X + Porous2D::sheetLength / 2.0;
+            double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::sheetWidth / 2.0;
+            double zSheetCenter = setPoint1->Coordinates().Z;
+            //----Get porous zone boundary start point coordinary
+            NXOpen::Point* pointPorousZoneStart;
+            double xZoneStart = xSheetCenter - Porous2D::sheetLength / 2.0;
+            double yZoneStart = ySheetCenter - Porous2D::sheetWidth / 2.0;
+            double zZoneStart = zSheetCenter;
+            double zoneLength = Porous2D::sheetLength;
+            double zoneWidth = Porous2D::sheetWidth;
+            //----Define local parameters
+            double ratio = Porous2D::doublePorousRatio->Value();
+            double diameter = Porous2D::expressionCelDiameter->Value();
+            //----Compute colum of particle hexagon
+            double gap = sqrt(PI / 2.0 / sqrt(3.0) / (1.0 -ratio)) * diameter;
+            int rowHexagon = floor(Porous2D::sheetWidth / (sqrt(3.0) / 2.0 * gap));
+            int columHexagon = floor(zoneLength / gap);
+//            Porous2D::particleNumber = floor(zoneLength * Porous2D::sheetWidth * (1.0 - ratio) * 4.0 / PI / (diameter * diameter));
+            Porous2D::particleNumber = rowHexagon * columHexagon;
+            double rowBoderGap = (zoneLength - gap * (columHexagon + 0.5)) / 2.0;
+            double colBoderGap = (Porous2D::sheetWidth - rowHexagon * gap * sqrt(3.0) / 2.0) / 2.0;
+            double realRatio = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
+            //----Compute start point coordination
+            double xStartPoint = xZoneStart + rowBoderGap + gap / 2.0;
+            double yStartPoint = yZoneStart + colBoderGap + gap / 2.0;
             double zStartPoint = zZoneStart;
+            //----Print process to info window
+            char tempString[256];
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                UF_UI_write_listing_window("->\t纸幅基本信息：\n");
+                std::sprintf(tempString, "->\t纸幅基重:%f (g/m2)\n", Porous2D::expressionBasisWeight->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t成纸干度:%f (%)\n", Porous2D::expressionDryContentFinal->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t当前干度:%f (%)\n", Porous2D::expressionDryContentNow->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纸幅厚度:%f (mm)\n", Porous2D::sheetWidth);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纤维直径:%f (mm)\n", Porous2D::expressionCelDiameter->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纤维长度:%f (mm)\n", Porous2D::expressionCelLength->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纤维长度密度:%f (g/m)\n", Porous2D::expressionLenDensity->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t行数:%d\t纤维行间距:%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t列数:%d\t纤维列间距:%f (mm)\n", columHexagon, gap);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纤维数量:%d \n", Porous2D::particleNumber);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t设计孔隙率:%f (\%)\n", ratio * 100.0);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t实际孔隙率:%f (\%)\n", realRatio);
+                UF_UI_write_listing_window(tempString);
+                UF_UI_write_listing_window("->\t纤维圆心坐标：\n");
+                UF_UI_write_listing_window("->\t[row,colum]\tx\ty\tz\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t纸幅基本信息：\n" << "->\t纸幅基重:" << Porous2D::expressionDryContentFinal->Value() << " (%)" << endl;
+                Porous2D::outf << "->\t当前干度:" << Porous2D::expressionDryContentNow->Value() << " (%)" << endl;
+                Porous2D::outf << "->\t纸幅厚度:" << Porous2D::sheetWidth << " (mm)" << endl;
+                Porous2D::outf << "->\t纤维直径:" << Porous2D::expressionCelDiameter->Value() << " (mm)" << endl;
+                Porous2D::outf << "->\t纤维长度:" << Porous2D::expressionCelLength->Value() << " (mm)" << endl;
+                Porous2D::outf << "->\t纤维长度密度:" << Porous2D::expressionLenDensity->Value() << " (g/m)" << endl;
+                Porous2D::outf << "->\t行数:" << rowHexagon << "\t纤维行间距: " << sqrt(3.0)/2.0*gap << " (mm)" << endl;
+                Porous2D::outf << "->\t列数:" << columHexagon << "\t纤维行间距: " << gap << " (mm)" << endl;
+                Porous2D::outf << "->\t纤维数量:" << Porous2D::particleNumber << endl;
+                Porous2D::outf << "->\t设计孔隙率:" << ratio * 100.0 << " (%)" << endl;
+                Porous2D::outf << "->\t实际孔隙率:" << realRatio << " (%)" << endl;
+                Porous2D::outf << "->\t纤维圆心坐标:" << endl;
+                Porous2D::outf << "->\t[row,colum]\tx\ty\tz" << endl;
+            }
             for (int i = 0; i < rowHexagon; i++)
             {
-                for (int j = 0; j < rowHexagon; j++)
+                for (int j = 0; j < columHexagon; j++)
                 {
                     //Initialize AssociativeArcBuiler
                     NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
@@ -689,17 +954,29 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
                     //Get particles' center points 
                     //----Create  circle center points
-                    double x = xStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
-                    double y = yStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
+                    double x = xStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
+                    double y = yStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                    double z = zStartPoint;
                     NXOpen::Scalar* scalarX1(NULL);
                     scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     NXOpen::Scalar* scalarY1(NULL);
                     scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     NXOpen::Scalar* scalarZ1(NULL);
-                    scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    scalarZ1 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     NXOpen::Point* circleCorePoint1;
                     circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                    centerPointCollector.push_back(circleCorePoint1);
+                    Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                    //----Print center points coordination of cellulose
+                    if (Porous2D::togglePrintInfo->Value() == true)
+                    {
+                        std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                        UF_UI_write_listing_window(tempString);
+                    }
+                    //----Print process to log file
+                    if (Porous2D::toggleWriteFile->Value() == true)
+                    {
+                        Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                    }
                     //Set AssociativeArcBuilder parameters
                     //----Create helpPoints for trim section
                     Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
@@ -716,7 +993,7 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
                     associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
                     associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
-                    associativeArcBuilder1->Diameter()->SetValue(Porous2D::expressionParticleSize->Value());
+                    associativeArcBuilder1->Diameter()->SetValue(Porous2D::expressionCelDiameter->Value());
                     associativeArcBuilder1->Limits()->SetFullCircle(true);
                     //Create circle particle curves
                     NXOpen::NXObject* nXObjectCircle;
@@ -731,63 +1008,261 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     associativeArcBuilder1->Destroy();
                 }
             }
+            //Print length of arcFeatureCollector and particleObject
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                int parObjectNum = Porous2D::particleObject.size();
+                int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                int parObjectMax = Porous2D::particleObject.max_size();
+                int arcFeatureCap = Porous2D::arcFeatureCollector.capacity();
+                int parObjectCap = Porous2D::particleObject.capacity();
+                std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\tarcFeatureMax:\t%d\tparticleObjectMax:\t%d\n",arcFeatureMax,parObjectMax);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\tarcFeatureCap:\t%d\tparticleObjectCap:\t%d\n",arcFeatureCap,parObjectCap);
+                UF_UI_write_listing_window(tempString);
+            }
         }
         else
         {
-            //Compute start point coordination
-            double xStartPoint = xZoneStart + boderGap + extraBoderGap + diameter / 2.0;
-            double yStartPoint = yZoneStart + boderGap + diameter / 2.0;
-            double zStartPoint = zZoneStart;
-            for (int i = 0; i < rowHexagon; i++)
+            //----Print process to info window
+            if (Porous2D::togglePrintInfo->Value() == true)
             {
-                for (int j = 0; j < rowHexagon; j++)
+                UF_UI_write_listing_window("->\t------------------普通介质生成方式------------------\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t------------------普通介质生成方式------------------" << endl;
+            }
+            //----Get sheet start point's coordinate
+            NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
+            double x0 = setPoint1->Coordinates().X;
+            double y0 = setPoint1->Coordinates().Y;
+            double z0 = setPoint1->Coordinates().Z;
+            //----Get sheet center point's coordinate
+            double xSheetCenter = setPoint1->Coordinates().X + Porous2D::expressionFaceLength->Value() / 2.0;
+            double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::expressionFaceWidth->Value() / 2.0;
+            double zSheetCenter = setPoint1->Coordinates().Z;
+            //----Get porous zone boundary start point coordinary
+            NXOpen::Point* pointPorousZoneStart;
+            double xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+            double yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+            double zZoneStart = zSheetCenter;
+            double zoneLength = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+            //----Define local parameters
+            double ratio = Porous2D::doublePorousRatio->Value();
+            double diameter = Porous2D::expressionParticleSize->Value();
+            //----Compute colum of particle hexagon
+            int rowHexagon = floor(sqrt(zoneLength * zoneLength * (1.0 - ratio) * 4.0 / PI / (diameter * diameter)));
+            Porous2D::particleNumber = rowHexagon * rowHexagon;
+            double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneLength)) * 100.0;
+            double gap = 2.0 * zoneLength / (2.0 * (double)rowHexagon + 1.0) - diameter;
+            double boderGap = gap / 2.0;
+            double extraBoderGap = (diameter + gap) * ((2.0 - sqrt(3.0)) * rowHexagon / 2.0 + (sqrt(3.0) - 1.0) / 2.0) / 2.0;
+            //----Print process to info window
+            char tempString[256];
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                UF_UI_write_listing_window("->\t介质基本信息：\n");
+                std::sprintf(tempString, "->\t介质长度:%f (mm)\n", Porous2D::expressionFaceLength->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t介质宽度:%f (mm)\n", Porous2D::expressionFaceWidth->Value());
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t设计孔隙率:%f (\%)\n", ratio * 100.0);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t实际孔隙率:%f (\%)\n", realPorosity);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t行数:%d\t纤维行间距:%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t列数:%d\t纤维列间距:%f (mm)\n", rowHexagon, gap);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t纤维数量:%d \n", Porous2D::particleNumber);
+                UF_UI_write_listing_window(tempString);
+                UF_UI_write_listing_window("->\t纤维圆心坐标：\n");
+                UF_UI_write_listing_window("->\t[row,colum]\tx\ty\tz\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t介质基本信息：\n" << "->\t介质长度:" << Porous2D::expressionFaceLength->Value() << " (mm)" << endl;
+                Porous2D::outf << "->\t介质宽度:" << Porous2D::expressionFaceWidth->Value() << " (mm)" << endl;
+                Porous2D::outf << "->\t设计孔隙率:" << ratio * 100.0 << " (%)" << endl;
+                Porous2D::outf << "->\t实际孔隙率:" << realPorosity << " (%)" << endl;
+                Porous2D::outf << "->\t行数:" << rowHexagon << "\t纤维行间距: " << sqrt(3.0)/2.0*gap << " (mm)" << endl;
+                Porous2D::outf << "->\t列数:" << rowHexagon << "\t纤维行间距: " << gap << " (mm)" << endl;
+                Porous2D::outf << "->\t纤维数量:" << Porous2D::particleNumber << endl;
+                Porous2D::outf << "->\t纤维圆心坐标:" << endl;
+                Porous2D::outf << "->\t[row,colum]\tx\ty\tz" << endl;
+            }
+            //Generate circle particle curves
+            //Judge hexagon direction
+            if (Porous2D::expressionFaceLength->Value() <= Porous2D::expressionFaceWidth->Value())
+            {
+                //Compute start point coordination
+                double xStartPoint = xZoneStart + boderGap + diameter / 2.0;
+                double yStartPoint = yZoneStart + boderGap + extraBoderGap + diameter / 2.0;
+                double zStartPoint = zZoneStart;
+                for (int i = 0; i < rowHexagon; i++)                                                                                                                                                                                                            
                 {
-                    //Initialize AssociativeArcBuiler
-                    NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
-                    NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
-                    associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
-                    //Get particles' center points 
-                    //----Create  circle center points
-                    double x = xStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
-                    double y = yStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
-                    NXOpen::Scalar* scalarX1(NULL);
-                    scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                    NXOpen::Scalar* scalarY1(NULL);
-                    scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                    NXOpen::Scalar* scalarZ1(NULL);
-                    scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                    NXOpen::Point* circleCorePoint1;
-                    circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                    centerPointCollector.push_back(circleCorePoint1);
-                    //Set AssociativeArcBuilder parameters
-                    //----Create helpPoints for trim section
-                    helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
-                    helpPointCollector.push_back(helpPoint);
-                    //----Set circle curves' genaration plane
-                    NXOpen::Vector3d Vector1;
-                    Vector1 = { 0.0, 0.0, 1.0 };
-                    //----Open switch to set plane normal direction
-                    NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
-                    planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
-                    associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
-                    //----Set AssociativeArcBuilder required parameters
-                    associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
-                    associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
-                    associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
-                    associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
-                    associativeArcBuilder1->Diameter()->SetValue(expressionParticleSize->Value());
-                    associativeArcBuilder1->Limits()->SetFullCircle(true);
-                    //Create circle particle curves
-                    NXOpen::NXObject* nXObjectCircle;
-                    nXObjectCircle = associativeArcBuilder1->Commit();
-                    //Pass to global parameters
-                    //----Get particle curves' objects
-                    particleObject.push_back(nXObjectCircle);
-                    //----Get particle curves' features
-                    arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
-                    arcFeatureCollector.push_back(arcFeature);
-                    //Free memory
-                    associativeArcBuilder1->Destroy();
+                    for (int j = 0; j < rowHexagon; j++)
+                    {
+                        //Initialize AssociativeArcBuiler
+                        NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
+                        NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
+                        associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
+                        //Get particles' center points 
+                        //----Create  circle center points
+                        double x = xStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
+                        double y = yStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
+                        double z = zStartPoint;
+                        NXOpen::Scalar* scalarX1(NULL);
+                        scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Scalar* scalarY1(NULL);
+                        scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Scalar* scalarZ1(NULL);
+                        scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Point* circleCorePoint1;
+                        circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                        //Set AssociativeArcBuilder parameters
+                        //----Create helpPoints for trim section
+                        Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
+                        Porous2D::helpPointCollector.push_back(helpPoint);
+                        //----Print center points coordination of cellulose
+                        if (Porous2D::togglePrintInfo->Value() == true)
+                        {
+                            std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                            UF_UI_write_listing_window(tempString);
+                        }
+                        //----Print process to log file
+                        if (Porous2D::toggleWriteFile->Value() == true)
+                        {
+                            Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                        }
+                        //----Set circle curves' genaration plane
+                        NXOpen::Vector3d Vector1;
+                        Vector1 = { 0.0, 0.0, 1.0 };
+                        //----Open switch to set plane normal direction
+                        NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
+                        planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
+                        associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
+                        //----Set AssociativeArcBuilder required parameters
+                        associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
+                        associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
+                        associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
+                        associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
+                        associativeArcBuilder1->Diameter()->SetValue(Porous2D::expressionParticleSize->Value());
+                        associativeArcBuilder1->Limits()->SetFullCircle(true);
+                        //Create circle particle curves
+                        NXOpen::NXObject* nXObjectCircle;
+                        nXObjectCircle = associativeArcBuilder1->Commit();
+                        //Pass to global parameters
+                        //----Get particle curves' objects
+                        Porous2D::particleObject.push_back(nXObjectCircle);
+                        //----Get particle curves' features
+                        Porous2D::arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
+                        Porous2D::arcFeatureCollector.push_back(arcFeature);
+                        //Free memory
+                        associativeArcBuilder1->Destroy();
+                    }
+                }
+                //Print length of arcFeatureCollector and particleObject
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                    int parObjectNum = Porous2D::particleObject.size();
+                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                    int parObjectMax = Porous2D::particleObject.max_size();
+                    std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
+                    UF_UI_write_listing_window(tempString);
+                    std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
+                    UF_UI_write_listing_window(tempString);
+                }
+            }
+            else
+            {
+                //Compute start point coordination
+                double xStartPoint = xZoneStart + boderGap + extraBoderGap + diameter / 2.0;
+                double yStartPoint = yZoneStart + boderGap + diameter / 2.0;
+                double zStartPoint = zZoneStart;
+                for (int i = 0; i < rowHexagon; i++)                                                                                                                                                                                                            
+                {
+                    for (int j = 0; j < rowHexagon; j++)
+                    {
+                        //Initialize AssociativeArcBuiler
+                        NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
+                        NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
+                        associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
+                        //Get particles' center points 
+                        //----Create  circle center points
+                        double x = xStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
+                        double y = yStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
+                        double z = zStartPoint;
+                        NXOpen::Scalar* scalarX1(NULL);
+                        scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Scalar* scalarY1(NULL);
+                        scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Scalar* scalarZ1(NULL);
+                        scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        NXOpen::Point* circleCorePoint1;
+                        circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                        Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                        //Set AssociativeArcBuilder parameters
+                        //----Create helpPoints for trim section
+                        helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
+                        helpPointCollector.push_back(helpPoint);
+                        //----Print center points coordination of cellulose
+                        if (Porous2D::togglePrintInfo->Value() == true)
+                        {
+                            std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                            UF_UI_write_listing_window(tempString);
+                        }
+                        //----Print process to log file
+                        if (Porous2D::toggleWriteFile->Value() == true)
+                        {
+                            Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                        }
+                        //----Set circle curves' genaration plane
+                        NXOpen::Vector3d Vector1;
+                        Vector1 = { 0.0, 0.0, 1.0 };
+                        //----Open switch to set plane normal direction
+                        NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
+                        planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
+                        associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
+                        //----Set AssociativeArcBuilder required parameters
+                        associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
+                        associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
+                        associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
+                        associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
+                        associativeArcBuilder1->Diameter()->SetValue(expressionParticleSize->Value());
+                        associativeArcBuilder1->Limits()->SetFullCircle(true);
+                        //Create circle particle curves
+                        NXOpen::NXObject* nXObjectCircle;
+                        nXObjectCircle = associativeArcBuilder1->Commit();
+                        //Pass to global parameters
+                        //----Get particle curves' objects
+                        particleObject.push_back(nXObjectCircle);
+                        //----Get particle curves' features
+                        arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
+                        arcFeatureCollector.push_back(arcFeature);
+                        //Free memory
+                        associativeArcBuilder1->Destroy();
+                    }
+                }
+                //Print length of arcFeatureCollector and particleObject
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                    int parObjectNum = Porous2D::particleObject.size();
+                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                    int parObjectMax = Porous2D::particleObject.max_size();
+                    std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
+                    UF_UI_write_listing_window(tempString);
+                    std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
+                    UF_UI_write_listing_window(tempString);
                 }
             }
         }

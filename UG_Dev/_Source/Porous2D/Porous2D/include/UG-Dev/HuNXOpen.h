@@ -307,6 +307,7 @@
 #include <NXOpen/Facet_SnipFacetBodyBuilder.hxx>
 #include <NXOpen/Facet_STLImportBuilder.hxx>
 #include <NXOpen/Facet_SubdivideFacetBodyBuilder.hxx>
+#include <NXOpen/Features_ThickenBuilder.hxx>
 #include <NXOpen/FollowFilletRule.hxx>
 #include <NXOpen/FontCollection.hxx>
 #include <NXOpen/FourPointSurfaceBuilder.hxx>

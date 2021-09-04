@@ -86,5 +86,8 @@
     <ClInclude Include="include\GlobalParameters.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\UG-Dev\HuNXOpen.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
