@@ -89,5 +89,8 @@
     <ClInclude Include="include\UG-Dev\HuNXOpen.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\UG-Dev\uf_all.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

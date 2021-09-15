@@ -175,6 +175,7 @@ private:
     NXOpen::BlockStyler::Group* groupGenMethod;// Block type: Group
     NXOpen::BlockStyler::Enumeration* enumGenMethod;// Block type: Enumeration
     NXOpen::BlockStyler::Toggle* toggleMeshRandom;// Block type: Toggle
+    NXOpen::BlockStyler::Toggle* togglePaper;// Block type: Toggle
     NXOpen::BlockStyler::Group* groupSize;// Block type: Group
     NXOpen::BlockStyler::TabControl* tabControl1;// Block type: Tabs Page
     NXOpen::BlockStyler::Group* tabPage2;
@@ -185,13 +186,12 @@ private:
     NXOpen::BlockStyler::ExpressionBlock* expressionBasisWeight;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionDryContentFinal;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionDryContentNow;// Block type: Expression
-    NXOpen::BlockStyler::ExpressionBlock* expressionSheetLen;// Block type: Expression
     NXOpen::BlockStyler::Group* tabPage4;
     NXOpen::BlockStyler::ExpressionBlock* expressionLenDensity;// Block type: Expression
-    NXOpen::BlockStyler::ExpressionBlock* expressionCelLength;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionCelDiameter;// Block type: Expression
+    NXOpen::BlockStyler::ExpressionBlock* expressionCelLength;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionLenWidRatio;// Block type: Expression
-    NXOpen::BlockStyler::Toggle* togglePaper;// Block type: Toggle
+    NXOpen::BlockStyler::ExpressionBlock* expressionSheetLen;// Block type: Expression
     NXOpen::BlockStyler::ExpressionBlock* expressionComRatio;// Block type: Expression
     NXOpen::BlockStyler::Group* groupParticle;// Block type: Group
     NXOpen::BlockStyler::TabControl* tabControl;// Block type: Tabs Page
@@ -224,17 +224,19 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
 {
     if (Porous2D::togglePaper->Value() == false)
     {
+        //Four points creat plane
         //----Print process to info window
         if (Porous2D::togglePrintInfo->Value() == true)
         {
-            UF_UI_write_listing_window("->\t生成片体：普通方式\n");
+            UF_UI_write_listing_window("->生成片体：普通方式\n");
+            UF_UI_write_listing_window("->\t开始四点成面...\n");
         }
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t生成片体：普通方式" << endl;
+            Porous2D::outf << "->生成片体：普通方式" << endl;
+            Porous2D::outf << "->\t开始四点成面..." << endl;
         }
-        //Four points creat plane
         //Initialize FourPointSurfaceBuilder
         NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
         fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
@@ -245,6 +247,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         double x0 = setPoint1->Coordinates().X;
         double y0 = setPoint1->Coordinates().Y;
         double z0 = setPoint1->Coordinates().Z;
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第一点：[x: %f, y: %f, z: %f]\n",x0,y0,z0);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第一点：[x: " << x0 << ", y: " << y0 << ", z: " << z0 << endl;
+        }
         //----Set setpoint2
         NXOpen::Scalar* scalar21;
         scalar21 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -254,6 +268,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar23 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint2 = workPart->Points()->CreatePoint(scalar21, scalar22, scalar23, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint2(setPoint2);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第二点：[x: %f, y: %f, z: %f]\n",setPoint2->Coordinates().X,setPoint2->Coordinates().Y,setPoint2->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第二点：[x: " << setPoint2->Coordinates().X << ", y: " << setPoint2->Coordinates().Y << ", z: " << setPoint2->Coordinates().Z << endl;
+        }
         //----Set setpoint3
         NXOpen::Scalar* scalar31;
         scalar31 = workPart->Scalars()->CreateScalar(x0 + expressionFaceLength->Value(), NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -263,6 +289,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint3(setPoint3);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第三点：[x: %f, y: %f, z: %f]\n",setPoint3->Coordinates().X,setPoint3->Coordinates().Y,setPoint3->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第三点：[x: " << setPoint3->Coordinates().X << ", y: " << setPoint3->Coordinates().Y << ", z: " << setPoint3->Coordinates().Z << endl;
+        }
         //----Set setpoint4
         NXOpen::Scalar* scalar41;
         scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -272,29 +310,83 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint4(setPoint4);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第四点：[x: %f, y: %f, z: %f]\n",setPoint4->Coordinates().X,setPoint4->Coordinates().Y,setPoint4->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f\n",Porous2D::sheetLength,Porous2D::sheetWidth);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << endl;
+        }
         //Create surface object
         NXOpen::NXObject* nXObjectSheet;
         nXObjectSheet = fourPointSurfaceBuilder1->Commit();
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t完成四点成面！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t完成四点成面！" << endl;
+        }
         //Pass to global parameters
         //----Get trim taget object
-        Porous2D::porousSheetObject = nXObjectSheet;
+        Porous2D::SheetObject = nXObjectSheet;
         //----Get trim taget sheet bodies
         Porous2D::sheetBodys = dynamic_cast<NXOpen::Body*>(nXObjectSheet);
         Porous2D::sheetBodysCollector.push_back(Porous2D::sheetBodys);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t面体存储...\n");
+            NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+            string ID = sheetID.GetLocaleText();
+            string ss = "->\tsheetID:\t";
+            string printID = ss + ID + "\n";
+            UF_UI_write_listing_window(printID.c_str());
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t面体存储..." << endl;
+            NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+            string printID = sheetID.GetLocaleText();
+            Porous2D::outf << "->\tsheetID:" << printID << endl;
+        }
         //Free memory
         fourPointSurfaceBuilder1->Destroy();
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t内存释放！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t内存释放！" << endl;
+        }
     }
     else
     {
         //----Print process to info window
         if (Porous2D::togglePrintInfo->Value() == true)
         {
-            UF_UI_write_listing_window("->\t生成片体：纸幅方式\n");
+            UF_UI_write_listing_window("->生成片体：纸幅方式\n");
+            UF_UI_write_listing_window("->\t开始四点成面...\n");
         }
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t生成片体：普通方式" << endl;
+            Porous2D::outf << "->生成片体：普通方式" << endl;
+            Porous2D::outf << "->\t开始四点成面..." << endl;
         }
         //Four points creat plane
         //Initialize FourPointSurfaceBuilder
@@ -307,6 +399,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         double x0 = setPoint1->Coordinates().X;
         double y0 = setPoint1->Coordinates().Y;
         double z0 = setPoint1->Coordinates().Z;
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第一点：[x: %f, y: %f, z: %f]\n",x0,y0,z0);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第一点：[x: " << x0 << ", y: " << y0 << ", z: " << z0 << endl;
+        }
         //----Get sheet height
         Porous2D::sheetWidth = Porous2D::expressionBasisWeight->Value() /1000.0 * Porous2D::expressionDryContentFinal->Value() / 100.0\
             / (1.0 - Porous2D::doublePorousRatio->Value()) * (1.0 / 1.5e3 + (1.0 - Porous2D::expressionDryContentNow->Value() / 100.0) \
@@ -321,6 +425,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar23 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint2 = workPart->Points()->CreatePoint(scalar21, scalar22, scalar23, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint2(setPoint2);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第二点：[x: %f, y: %f, z: %f]\n",setPoint2->Coordinates().X,setPoint2->Coordinates().Y,setPoint2->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第二点：[x: " << setPoint2->Coordinates().X << ", y: " << setPoint2->Coordinates().Y << ", z: " << setPoint2->Coordinates().Z << endl;
+        }
         //----Set setpoint3
         NXOpen::Scalar* scalar31;
         scalar31 = workPart->Scalars()->CreateScalar(x0 + Porous2D::sheetLength, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -330,6 +446,18 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint3(setPoint3);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第三点：[x: %f, y: %f, z: %f]\n",setPoint3->Coordinates().X,setPoint3->Coordinates().Y,setPoint3->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第三点：[x: " << setPoint3->Coordinates().X << ", y: " << setPoint3->Coordinates().Y << ", z: " << setPoint3->Coordinates().Z << endl;
+        }
         //----Set setpoint4
         NXOpen::Scalar* scalar41;
         scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -339,17 +467,70 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint4(setPoint4);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t第四点：[x: %f, y: %f, z: %f]\n",setPoint4->Coordinates().X,setPoint4->Coordinates().Y,setPoint4->Coordinates().Z);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f\n",Porous2D::sheetLength,Porous2D::sheetWidth);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << endl;
+            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "片体宽：" << Porous2D::sheetWidth << endl;
+        }
         //Create surface object
         NXOpen::NXObject* nXObjectSheet;
         nXObjectSheet = fourPointSurfaceBuilder1->Commit();
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t完成四点成面！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t完成四点成面！" << endl;
+        }
         //Pass to global parameters
         //----Get trim taget object
         Porous2D::SheetObject = nXObjectSheet;
         //----Get trim taget sheet bodies
         Porous2D::sheetBodys = dynamic_cast<NXOpen::Body*>(nXObjectSheet);
         Porous2D::sheetBodysCollector.push_back(Porous2D::sheetBodys);
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t面体存储...\n");
+            NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+            string ID = sheetID.GetLocaleText();
+            string ss = "->\tsheetID:\t";
+            string printID = ss + ID + "\n";
+            UF_UI_write_listing_window(printID.c_str());
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t面体存储..." << endl;
+            NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+            string printID = sheetID.GetLocaleText();
+            Porous2D::outf << "->\tsheetID:" << printID << endl;
+        }
         //Free memory
         fourPointSurfaceBuilder1->Destroy();
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t内存释放！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t内存释放！" << endl;
+        }
     }
 }
 
@@ -413,7 +594,9 @@ double Porous2D::GetRandomCoordinate(NXOpen::Part* workPart, std::string directi
     }
     else
     {
-        uc1601("Error: Wrong direction in particle curve genaration!", 1);
+        uc1601("Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!", 1);
+        UF_UI_write_listing_window("Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!\n");
+        Porous2D::outf << "Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!" << endl;
     }
 }
 
@@ -431,7 +614,9 @@ int Porous2D::GetRandomNode(NXOpen::Part* workPart, std::string direction)
     }
     else
     {
-        uc1601("Error: Wrong direction in particle curve genaration!", 1);
+        uc1601("Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!", 1);
+        UF_UI_write_listing_window("Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!\n");
+        Porous2D::outf << "Error:(GetRandomCoordinate:)Wrong direction in particle curve genaration!" << endl;
     }
 }
 
@@ -451,10 +636,19 @@ void Porous2D::MeshSheet(NXOpen::Part* workPart)
             double z0 = Porous2D::pointSheetStart->Point().Z;
             Porous2D::nodeMeshX.push_back((double)(i * xNodeLength) + x0);
             Porous2D::nodeMeshY.push_back((double)(j * yNodeLength) + y0);
-            //char msg[256];
-            //sprintf(msg, "i:%d,j:%d;nPick:%d;*xNode:%d;yNode:%d;*xNodeX:%f;yNodeY:%f;*x0:%f;y0:%f;*xLength:%f;yLength:%f",i,j,nPick,xNode,yNode,xNodeX,yNodeY,x0,y0,xNodeLength,yNodeLength);
-            //uc1601(msg, 1);
         }
+    }
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        char tempString[256];
+        std::sprintf(tempString, "->\t行节点数：%d\t列节点数： %d\n",xNodeNumber,yNodeNumber);
+        UF_UI_write_listing_window(tempString);
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t行节点数：" << xNodeNumber << "\t列节点数：" << yNodeNumber << endl;
     }
 }
 
@@ -464,12 +658,12 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
     //----Print process to info window
     if (Porous2D::togglePrintInfo->Value() == true)
     {
-        UF_UI_write_listing_window("->\t剪切片体：\n");
+        UF_UI_write_listing_window("->剪切片体：\n");
     }
     //----Print process to log file
     if (Porous2D::toggleWriteFile->Value() == true)
     {
-        Porous2D::outf << "->\t剪切片体：" << endl;
+        Porous2D::outf << "->剪切片体：" << endl;
     }
     //Trim sheet to get porous
     //Initialize parameters
@@ -504,6 +698,16 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
     std::vector<NXOpen::Arc*> arcSelected(Porous2D::particleNumber);
     std::vector<NXOpen::Spline*> splineSelected(Porous2D::particleNumber);
     char tempString[256];
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t循环读取添加特征...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t循环读取添加特征..." << endl;
+    }
     //Set loop
     while (currentParticleNum < Porous2D::particleNumber)
     {
@@ -511,37 +715,14 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
         {
             splineSelected[currentParticleNum] = dynamic_cast<NXOpen::Spline*>(splineFeatureCollector[currentParticleNum]->FindObject("CURVE 1"));
             curves1[currentParticleNum] = splineSelected[currentParticleNum];
-            //----Print process to info window
-            //if (Porous2D::togglePrintInfo->Value() == true)
-            //{
-            //    std::sprintf(tempString, "->\t%d:\tcurveNum:%I64u\tcurveCap:%I64u\n",currentParticleNum,curves1.size(),curves1.capacity());
-            //    UF_UI_write_listing_window(tempString);
-            //}
         }
         else if ((std::string)(enumParticleShape->ValueAsString().GetText()) == "Circle")
         {
             arcSelected[currentParticleNum] = dynamic_cast<NXOpen::Arc*>(Porous2D::arcFeatureCollector[currentParticleNum]->FindObject("CURVE 1"));
             curves1[currentParticleNum] = arcSelected[currentParticleNum];
-            //----Print process to info window
-            //if (Porous2D::togglePrintInfo->Value() == true)
-            //{
-            //    std::sprintf(tempString, "->\t%d:\tcurveNum:%I64u\tcurveCap:%I64u\n",currentParticleNum,curves1.size(),curves1.capacity());
-            //    UF_UI_write_listing_window(tempString);
-            //}
         }
         //Update particle number
         currentParticleNum++;
-    }
-    //----Print process to info window
-    if (Porous2D::togglePrintInfo->Value() == true)
-    {
-        std::sprintf(tempString, "->\tcurveNum:%I64u\n", curves1.size());
-        UF_UI_write_listing_window(tempString);
-    }
-    //----Print process to log file
-    if (Porous2D::toggleWriteFile->Value() == true)
-    {
-        Porous2D::outf << "->\tcurveNum:" << curves1.size() << endl;
     }
     NXOpen::CurveDumbRule* curveDumbRule1;
     curveDumbRule1 = workPart->ScRuleFactory()->CreateRuleBaseCurveDumb(curves1);
@@ -553,17 +734,76 @@ void Porous2D::TrimPorousSheet(NXOpen::Part* workPart)
     NXOpen::Point3d helpPointOrigin(0.0, 0.0, 0.0);
     section1->AddToSection(rules1, nullNXOpen_NXObject, nullNXOpen_NXObject, nullNXOpen_NXObject, helpPointOrigin, NXOpen::Section::ModeCreate, false);
     trimSheetBuilder1->ProjectionDirection()->SetProjectVector(nullNXOpen_Direction);
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t剪切...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t剪切..." << endl;
+    }
     //Trim sheet
     NXOpen::NXObject* nXObjectTrimPorousSheet;
     nXObjectTrimPorousSheet = trimSheetBuilder1->Commit();
     //Pass to global parameters
     //----Get porous2D taget object
     Porous2D::porousSheetObject = nXObjectTrimPorousSheet;
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        std::sprintf(tempString, "->\tcurveNum:%I64u\n", curves1.size());
+        UF_UI_write_listing_window(tempString);
+        //----Find Journalldentifier of sheet body
+        NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+        string sID = sheetID.GetLocaleText();
+        string sss = "->\tsheetID:\t";
+        string sheetPrintID = sss + sID + "\n";
+        UF_UI_write_listing_window(sheetPrintID.c_str());
+        //----Find Journalldentifier of trim feature of sheet body
+        NXOpen::NXString trimSheetID = Porous2D::porousSheetObject->JournalIdentifier();
+        string tID = trimSheetID.GetLocaleText();
+        string tss = "->\ttrimSheetID:\t";
+        string trimSheetPrintID = tss + tID + "\n";
+        UF_UI_write_listing_window(trimSheetPrintID.c_str());
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\tcurveNum:" << curves1.size() << endl;
+        NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+        string sID = sheetID.GetLocaleText();
+        Porous2D::outf << "->\tsheetID:\t" << sID << endl;
+        NXOpen::NXString trimSheetID = Porous2D::porousSheetObject->JournalIdentifier();
+        string tID = trimSheetID.GetLocaleText();
+        Porous2D::outf << "->\ttrimSheetID:\t" << tID << endl;
+    }
     //----Get trim taget sheet bodies
     Porous2D::porousBodys2D = dynamic_cast<NXOpen::Body*>(nXObjectTrimPorousSheet);
     Porous2D::porousBodys2DCollector.push_back(Porous2D::porousBodys2D);
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t剪切片体存储...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t剪切片体存储..." << endl;
+    }
     //Free memory
     trimSheetBuilder1->Destroy();
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t内存释放！\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t内存释放！" << endl;
+    }
 }
 
 //Generate 3D porous medium
@@ -573,14 +813,14 @@ void Porous2D::GenPorous3D(NXOpen::Part* workPart)
     if (Porous2D::togglePrintInfo->Value() == true)
     {
         char tempString[256];
-        UF_UI_write_listing_window("->\t生成3D介质：\n");
+        UF_UI_write_listing_window("->生成3D介质：\n");
         std::sprintf(tempString, "->\t拉伸长度:%f (mm)\n", Porous2D::expressionSheetLen->Value());
         UF_UI_write_listing_window(tempString);
     }
     //----Print process to log file
     if (Porous2D::toggleWriteFile->Value() == true)
     {
-        Porous2D::outf << "->\t生成3D介质：" << endl;
+        Porous2D::outf << "->生成3D介质：" << endl;
         Porous2D::outf << "->\t拉伸长度:" << Porous2D::expressionSheetLen->Value() << " (mm)" << endl;
     }
     //Create thickenBuilder to sheet
@@ -592,43 +832,164 @@ void Porous2D::GenPorous3D(NXOpen::Part* workPart)
     thickenBuilder1->RegionToPierce()->SetChainingTolerance(0.00095);
     //----Find Journalldentifier of sheet body
     NXOpen::NXString sheetID = Porous2D::SheetObject->JournalIdentifier();
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        string ID = sheetID.GetLocaleText();
+        string ss = "->\tsheetID:\t";
+        string printID = ss + ID + "\n";
+        UF_UI_write_listing_window(printID.c_str());
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        string printID = sheetID.GetLocaleText();
+        Porous2D::outf << "->\tsheetID:" << printID << endl;
+    }
     NXOpen::Body *body1(dynamic_cast<NXOpen::Body *>(workPart->Bodies()->FindObject(sheetID)));
     NXOpen::FaceBodyRule *faceBodyRule1;
     faceBodyRule1 = workPart->ScRuleFactory()->CreateRuleFaceBody(body1);
     std::vector<NXOpen::SelectionIntentRule *> rules1(1);
     rules1[0] = faceBodyRule1;
     thickenBuilder1->FaceCollector()->ReplaceRules(rules1, false);
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        char tempString[256];
+        std::sprintf(tempString, "->\t设置拉伸长度:%f (mm)\n", Porous2D::expressionSheetLen->Value());
+        UF_UI_write_listing_window(tempString);
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t设置拉伸长度:" << Porous2D::expressionSheetLen->Value() << " (mm)" << endl;
+    }
     //----Set distance to thicken
     thickenBuilder1->FirstOffset()->SetValue(Porous2D::expressionSheetLen->Value());
     NXOpen::NXObject *nXObjectThickenSheet;
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t拉伸...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t拉伸..." << endl;
+    }
     nXObjectThickenSheet = thickenBuilder1->Commit();
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t拉伸完成！\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t拉伸完成！" << endl;
+    }
     thickenBuilder1->Destroy();
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t内存释放！\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t内存释放！" << endl;
+    }
 }
 //------------------------------------------------------------------------------
 
 //Generate random form porous
 void Porous2D::GenRandom(NXOpen::Part* workPart)
 {
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->生成颗粒：随机方式\n");
+        UF_UI_write_listing_window("->\t开始生成颗粒...\n");
+        UF_UI_write_listing_window("->\t生成格式化网格...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->生成颗粒：随机方式" << endl;
+        Porous2D::outf << "->\t开始生成颗粒..." << endl;
+        Porous2D::outf << "->\t生成格式化网格..." << endl;
+    }
     MeshSheet(workPart);
     //Generate random seed
     std::srand((unsigned)std::time(0));
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t生成随机种子...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t生成随机种子..." << endl;
+    }
     bool randomPR = Porous2D::toggleUsePorousRatio->Value();
     if (randomPR)
     {
         double ratio = Porous2D::doublePorousRatio->Value();
-        double length = Porous2D::expressionFaceLength->Value();
-        double width = Porous2D::expressionFaceWidth->Value();
+//        double length = Porous2D::expressionFaceLength->Value();
+//        double width = Porous2D::expressionFaceWidth->Value();
+        Porous2D::sheetLength = Porous2D::expressionFaceLength->Value();
+        Porous2D::sheetWidth = Porous2D::expressionFaceWidth->Value();
         double diameter = Porous2D::expressionParticleSize->Value();
-        Porous2D::particleNumber = floor((1.0 - ratio) * length * width / (PI * diameter * diameter / 4.0));
+        Porous2D::particleNumber = floor((1.0 - ratio) * Porous2D::sheetLength * Porous2D::sheetWidth / (PI * diameter * diameter / 4.0));
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t使用设置孔隙率...\n");
+            char tempString[256];
+            std::sprintf(tempString, "->\t颗粒数：%d\n",Porous2D::particleNumber);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t使用设置孔隙率..." << endl;
+            Porous2D::outf << "->\t颗粒数：" << Porous2D::particleNumber << endl;
+        }
     }
     else
     {
         Porous2D::particleNumber = Porous2D::integerParticleNumber->Value();
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t使用设置颗粒数...\n");
+            char tempString[256];
+            std::sprintf(tempString, "->\t颗粒数：%d\n",Porous2D::particleNumber);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t使用设置颗粒数..." << endl;
+            Porous2D::outf << "->\t颗粒数：" << Porous2D::particleNumber << endl;
+        }
     }
     //Judge particle shape
     if ((std::string)(Porous2D::enumParticleShape->ValueAsString()).GetText() == "Circle")
     {
         //Create circle center point
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t生成(圆形)颗粒中心点...\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成(圆形)颗粒中心点..." << endl;
+        }
+        char tempString[256];
         //Generate circle particle curves
         for (int i = 0; i < Porous2D::particleNumber; i++)
         {
@@ -650,6 +1011,17 @@ void Porous2D::GenRandom(NXOpen::Part* workPart)
                 xPick = GetRandomCoordinate(workPart, "x");
                 yPick = GetRandomCoordinate(workPart, "y");
                 zPick = z0;
+                //----Print process to info window
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    std::sprintf(tempString, "->\t[%d]\t普通随机点\tx: %f, y: %f, z: %f\n",i,xPick,yPick,zPick);
+                    UF_UI_write_listing_window(tempString);
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->\t[" << i << "]\t普通随机点\tx: " << xPick << ", y: " << yPick << ", z: " << zPick << endl;
+                }
             }
             else
             {
@@ -660,6 +1032,17 @@ void Porous2D::GenRandom(NXOpen::Part* workPart)
                 xPick = Porous2D::nodeMeshX[(int)(nodePick-1)];
                 yPick = Porous2D::nodeMeshY[(int)(nodePick-1)];
                 zPick = z0;
+                //----Print process to info window
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    std::sprintf(tempString, "->\t[%d]\t网格点\t[%d,%d]\tx: %f, y: %f, z: %f\n",i,nodeI, nodeJ,xPick,yPick,zPick);
+                    UF_UI_write_listing_window(tempString);
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->\t[" << i << "]\t网格点\t[" << nodeI << "," << nodeJ << "]\tx: " << xPick << ", y: " << yPick << ", z: " << zPick << endl;
+                }
             }
             NXOpen::Scalar* scalarX1(NULL);
             scalarX1 = workPart->Scalars()->CreateScalar(xPick, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -699,20 +1082,64 @@ void Porous2D::GenRandom(NXOpen::Part* workPart)
             //Free memory
             associativeArcBuilder1->Destroy();
         }
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t完成中心点与直径成圆！\n");
+            UF_UI_write_listing_window("->\t圆线存储...\n");
+            UF_UI_write_listing_window("->\t内存释放！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+            Porous2D::outf << "->\t圆线存储..." << endl;
+            Porous2D::outf << "->\t内存释放！" << endl;
+        }
     }
     else if ((std::string)(enumParticleShape->ValueAsString()).GetText() == "Square")
     {
-
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t生成(方形)颗粒中心点...\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成(方形)颗粒中心点..." << endl;
+        }
     }
     else if ((std::string)(enumParticleShape->ValueAsString()).GetText() == "Triangle")
     {
-
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t生成(三角形)颗粒中心点...\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t生成(三角形)颗粒中心点..." << endl;
+        }
     }
 }
 
 //Generate square form porous
 void Porous2D::GenSquare(NXOpen::Part* workPart)
 {
+    //----Print process to info window
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->生成颗粒：方形阵列\n");
+        UF_UI_write_listing_window("->\t开始生成颗粒...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->生成颗粒：方形阵列" << endl;
+        Porous2D::outf << "->\t开始生成颗粒..." << endl;
+    }
     //Judge particle shape
     if ((std::string)(Porous2D::enumParticleShape->ValueAsString()).GetText() == "Circle")
     {
@@ -835,12 +1262,14 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
         //----Print process to info window
         if (Porous2D::togglePrintInfo->Value() == true)
         {
-            UF_UI_write_listing_window("->\t生成颗粒：六边形阵列 | 圆形颗粒\n");
+            UF_UI_write_listing_window("->\t生成颗粒：六边形阵列\n");
+            UF_UI_write_listing_window("->\t开始生成颗粒...\n");
         }
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t生成颗粒：六边形阵列 | 圆形颗粒" << endl;
+            Porous2D::outf << "->\t生成颗粒：六边形阵列" << endl;
+            Porous2D::outf << "->\t开始生成颗粒..." << endl;
         }
         //Judge generation method
         if (Porous2D::togglePaper->Value() == true)
@@ -1180,6 +1609,22 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     UF_UI_write_listing_window(tempString);
                     std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
                     UF_UI_write_listing_window(tempString);
+                    UF_UI_write_listing_window("->\t完成中心点与直径成圆！");
+                    UF_UI_write_listing_window("->\t圆线存储...");
+                    UF_UI_write_listing_window("->\t内存释放！");
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                    int parObjectNum = Porous2D::particleObject.size();
+                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                    int parObjectMax = Porous2D::particleObject.max_size();
+                    Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
+                    Porous2D::outf << "->\tarcFeatureCapacity:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
+                    Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+                    Porous2D::outf << "->\t圆线存储..." << endl;
+                    Porous2D::outf << "->\t内存释放！" << endl;
                 }
             }
             else
@@ -1263,6 +1708,22 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     UF_UI_write_listing_window(tempString);
                     std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
                     UF_UI_write_listing_window(tempString);
+                    UF_UI_write_listing_window("->\t完成中心点与直径成圆！");
+                    UF_UI_write_listing_window("->\t圆线存储...");
+                    UF_UI_write_listing_window("->\t内存释放！");
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                    int parObjectNum = Porous2D::particleObject.size();
+                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                    int parObjectMax = Porous2D::particleObject.max_size();
+                    Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
+                    Porous2D::outf << "->\tarcFeatureCapacity:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
+                    Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+                    Porous2D::outf << "->\t圆线存储..." << endl;
+                    Porous2D::outf << "->\t内存释放！" << endl;
                 }
             }
         }

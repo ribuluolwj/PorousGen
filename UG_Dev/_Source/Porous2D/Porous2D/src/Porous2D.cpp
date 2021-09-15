@@ -197,6 +197,7 @@ void Porous2D::initialize_cb()
         groupGenMethod = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupGenMethod"));
         enumGenMethod = dynamic_cast<NXOpen::BlockStyler::Enumeration*>(theDialog->TopBlock()->FindBlock("enumGenMethod"));
         toggleMeshRandom = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleMeshRandom"));
+        togglePaper = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePaper"));
         groupSize = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSize"));
         tabControl1 = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControl1"));
         tabPage2 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage2"));
@@ -207,13 +208,12 @@ void Porous2D::initialize_cb()
         expressionBasisWeight = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionBasisWeight"));
         expressionDryContentFinal = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentFinal"));
         expressionDryContentNow = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentNow"));
-        expressionSheetLen = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionSheetLen"));
         tabPage4 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage4"));
         expressionLenDensity = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenDensity"));
-        expressionCelLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelLength"));
         expressionCelDiameter = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelDiameter"));
+        expressionCelLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelLength"));
         expressionLenWidRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenWidRatio"));
-        togglePaper = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePaper"));
+        expressionSheetLen = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionSheetLen"));
         expressionComRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionComRatio"));
         expressionFaceLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceLength"));
         expressionFaceWidth = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceWidth"));
@@ -317,6 +317,14 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
             //---------Enter your code here-----------
         }
+        else if(block == toggleMeshRandom)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == togglePaper)
+        {
+        //---------Enter your code here-----------
+        }
         else if (block == expressionFaceLength)
         {
             //---------Enter your code here-----------
@@ -328,7 +336,6 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         else if (block == expressionParticleSize)
         {
             //---------Enter your code here-----------
-
         }
         else if (block == expressionBasisWeight)
         {
@@ -342,15 +349,7 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
             //---------Enter your code here-----------
         }
-        else if (block == expressionSheetLen)
-        {
-            //---------Enter your code here-----------
-        }
         else if(block == expressionLenDensity)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == expressionCelLength)
         {
         //---------Enter your code here-----------
         }
@@ -358,13 +357,17 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
+        else if(block == expressionCelLength)
+        {
+        //---------Enter your code here-----------
+        }
         else if(block == expressionLenWidRatio)
         {
         //---------Enter your code here-----------
         }
-        else if(block == togglePaper)
+        else if (block == expressionSheetLen)
         {
-        //---------Enter your code here-----------
+            //---------Enter your code here-----------
         }
         else if(block == expressionComRatio)
         {

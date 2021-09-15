@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{EDABDB84-43A7-426E-8F3B-BEA7841A4680}</ProjectGuid>
     <RootNamespace>Porous2D</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -77,6 +77,7 @@
     <SourcePath>$(VC_SourcePath);</SourcePath>
     <IncludePath>$(SolutionDir)lib\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <ReferencePath>C:\Program Files %28x86%29\Windows Kits\10\Include\10.0.19041.0\ucrt;$(ReferencePath)</ReferencePath>
+    <PublicIncludeDirectories>D:\mingw-w64\include\c++\11.2.1;D:\mingw-w64\include\boost;D:\mingw-w64\include</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -177,6 +178,7 @@
   <ItemGroup>
     <ClInclude Include="include\GlobalParameters.h" />
     <ClInclude Include="include\UG-Dev\HuNXOpen.h" />
+    <ClInclude Include="include\UG-Dev\uf_all.h" />
     <ClInclude Include="include\Voronoi\BeachLine.h" />
     <ClInclude Include="include\Voronoi\Cell.h" />
     <ClInclude Include="include\Voronoi\CircleEventQueue.h" />
