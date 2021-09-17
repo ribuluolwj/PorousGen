@@ -1499,7 +1499,7 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             double colBoderGap = (Porous2D::sheetWidth - rowHexagon * gap * sqrt(3.0) / 2.0)  * comRatio / 2.0;
             double origPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * Porous2D::sheetWidth)) * 100.0;
             double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
-            //----Check compress ratio
+            //----Check compress ratio 
             double minComRatio = (4.0 * diameter * diameter - gap * gap) / (3.0 * gap * gap);
             if (comRatio < minComRatio)
             {
