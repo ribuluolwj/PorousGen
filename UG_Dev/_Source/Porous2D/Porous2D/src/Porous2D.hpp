@@ -137,6 +137,8 @@ public:
 //    sheet size parameters
     double sheetLength = 0;
     double sheetWidth = 0;
+// particle diameter
+    double particleDiameter;
     //Set log file
     ofstream outf;
 
@@ -152,6 +154,7 @@ public:
     void GenHexagon(NXOpen::Part* workPart);
     void GenVoronoi(NXOpen::Part* workPart);
     void MeshSheet(NXOpen::Part* workPart);
+    void SaveAsIGES(NXOpen::Part* workPart);
 //    void genVertexPoints(NXOpen::Part* workPart);
 //    void Porous2D::genVertexPoints(Diagram* diagram);
 //    void genVertexPoints(std::vector<double>* sitesX, std::vector<double>* sitesY);
@@ -176,6 +179,7 @@ private:
     NXOpen::BlockStyler::Enumeration* enumGenMethod;// Block type: Enumeration
     NXOpen::BlockStyler::Toggle* toggleMeshRandom;// Block type: Toggle
     NXOpen::BlockStyler::Toggle* togglePaper;// Block type: Toggle
+    NXOpen::BlockStyler::Toggle* toggleOutFluid;// Block type: Toggle
     NXOpen::BlockStyler::Group* groupSize;// Block type: Group
     NXOpen::BlockStyler::TabControl* tabControl1;// Block type: Tabs Page
     NXOpen::BlockStyler::Group* tabPage2;
@@ -199,7 +203,6 @@ private:
     NXOpen::BlockStyler::IntegerBlock* integerParticleNumber;// Block type: Integer
     NXOpen::BlockStyler::DoubleBlock* doublePorousRatio;// Block type: Double
     NXOpen::BlockStyler::Toggle* toggleUsePorousRatio;// Block type: Toggle
-    NXOpen::BlockStyler::Toggle* toggleOutFluid;// Block type: Toggle
     NXOpen::BlockStyler::Group* tabPageVoronoi;
     NXOpen::BlockStyler::IntegerBlock* integerBSplineOrder;// Block type: Integer
     NXOpen::BlockStyler::IntegerBlock* integerScaleRatio;// Block type: Integer
@@ -212,6 +215,7 @@ private:
     NXOpen::BlockStyler::Button* buttonGenParticle;// Block type: Button
     NXOpen::BlockStyler::Button* buttonTrimParticle;// Block type: Button
     NXOpen::BlockStyler::Button* buttonGen3D;// Block type: Button
+    NXOpen::BlockStyler::Button* buttonSaveAsIges;// Block type: Button
     NXOpen::BlockStyler::Button* buttonOnekeyGen;// Block type: Button
     NXOpen::BlockStyler::Group* groupSet;// Block type: Group
     NXOpen::BlockStyler::Toggle* togglePrintInfo;// Block type: Toggle
@@ -241,6 +245,14 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
         fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
         //Create set points of surface
+        //----Set compress ratio
+        double comRatio = Porous2D::expressionComRatio->Value();
+        //----Judge if the generation method need use compress ratio
+        bool methodJudge = (std::string)(Porous2D::enumGenMethod->ValueAsString()).GetText() == "Hexagon" || (std::string)(Porous2D::enumGenMethod->ValueAsString()).GetText() == "Square";
+        if (Porous2D::toggleOutFluid->Value() == false && methodJudge)
+        {
+            comRatio = 1.0;
+        }
         //----Set setpoint1
         NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
         fourPointSurfaceBuilder1->SetPoint1(setPoint1);
@@ -310,6 +322,9 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
         fourPointSurfaceBuilder1->SetPoint4(setPoint4);
+        //----Compute sheet length and sheet width
+        Porous2D::sheetLength = max(abs(setPoint2->Coordinates().X - setPoint1->Coordinates().X),abs(setPoint4->Coordinates().Y - setPoint1->Coordinates().Y));
+        Porous2D::sheetWidth = min(abs(setPoint2->Coordinates().X - setPoint1->Coordinates().X),abs(setPoint4->Coordinates().Y - setPoint1->Coordinates().Y));
         //----Print process to info window
         if (Porous2D::togglePrintInfo->Value() == true)
         {
@@ -393,6 +408,8 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         NXOpen::FourPointSurfaceBuilder* fourPointSurfaceBuilder1;
         fourPointSurfaceBuilder1 = workPart->Bodies()->CreateFourPointSurfaceBuilder();
         //Create set points of surface
+        //----Set compress ratio
+        double comRatio = Porous2D::expressionComRatio->Value();
         //----Set setpoint1
         NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
         fourPointSurfaceBuilder1->SetPoint1(setPoint1);
@@ -409,7 +426,7 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t第一点：[x: " << x0 << ", y: " << y0 << ", z: " << z0 << endl;
+            Porous2D::outf << "->\t第一点：[x: " << x0 << ", y: " << y0 << ", z: " << z0 << "]" << endl;
         }
         //----Get sheet height
         Porous2D::sheetWidth = Porous2D::expressionBasisWeight->Value() /1000.0 * Porous2D::expressionDryContentFinal->Value() / 100.0\
@@ -435,13 +452,13 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t第二点：[x: " << setPoint2->Coordinates().X << ", y: " << setPoint2->Coordinates().Y << ", z: " << setPoint2->Coordinates().Z << endl;
+            Porous2D::outf << "->\t第二点：[x: " << setPoint2->Coordinates().X << ", y: " << setPoint2->Coordinates().Y << ", z: " << setPoint2->Coordinates().Z << "]" << endl;
         }
         //----Set setpoint3
         NXOpen::Scalar* scalar31;
         scalar31 = workPart->Scalars()->CreateScalar(x0 + Porous2D::sheetLength, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Scalar* scalar32;
-        scalar32 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        scalar32 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth * comRatio, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Scalar* scalar33;
         scalar33 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint3 = workPart->Points()->CreatePoint(scalar31, scalar32, scalar33, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -456,13 +473,13 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t第三点：[x: " << setPoint3->Coordinates().X << ", y: " << setPoint3->Coordinates().Y << ", z: " << setPoint3->Coordinates().Z << endl;
+            Porous2D::outf << "->\t第三点：[x: " << setPoint3->Coordinates().X << ", y: " << setPoint3->Coordinates().Y << ", z: " << setPoint3->Coordinates().Z << "]" << endl;
         }
         //----Set setpoint4
         NXOpen::Scalar* scalar41;
         scalar41 = workPart->Scalars()->CreateScalar(x0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Scalar* scalar42;
-        scalar42 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+        scalar42 = workPart->Scalars()->CreateScalar(y0 + Porous2D::sheetWidth * comRatio, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Scalar* scalar43;
         scalar43 = workPart->Scalars()->CreateScalar(z0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
         NXOpen::Point* setPoint4 = workPart->Points()->CreatePoint(scalar41, scalar42, scalar43, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -473,14 +490,17 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
             char tempString[256];
             std::sprintf(tempString, "->\t第四点：[x: %f, y: %f, z: %f]\n",setPoint4->Coordinates().X,setPoint4->Coordinates().Y,setPoint4->Coordinates().Z);
             UF_UI_write_listing_window(tempString);
-            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f\n",Porous2D::sheetLength,Porous2D::sheetWidth);
+            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f -->压缩后宽：%f\n",Porous2D::sheetLength, Porous2D::sheetWidth, comRatio * Porous2D::sheetWidth);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t压缩系数：%f\n",comRatio);
             UF_UI_write_listing_window(tempString);
         }
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
-            Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << endl;
-            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "片体宽：" << Porous2D::sheetWidth << endl;
+            Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << "]" << endl;
+            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "片体宽：" << Porous2D::sheetWidth << " -->压缩后宽：" << comRatio * Porous2D::sheetWidth << endl;
+            Porous2D::outf << "->\t压缩系数：" <<  comRatio << endl;
         }
         //Create surface object
         NXOpen::NXObject* nXObjectSheet;
@@ -1132,17 +1152,25 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
     if (Porous2D::togglePrintInfo->Value() == true)
     {
         UF_UI_write_listing_window("->生成颗粒：方形阵列\n");
-        UF_UI_write_listing_window("->\t开始生成颗粒...\n");
     }
     //----Print process to log file
     if (Porous2D::toggleWriteFile->Value() == true)
     {
         Porous2D::outf << "->生成颗粒：方形阵列" << endl;
-        Porous2D::outf << "->\t开始生成颗粒..." << endl;
     }
     //Judge particle shape
     if ((std::string)(Porous2D::enumParticleShape->ValueAsString()).GetText() == "Circle")
     {
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t开始生成(圆形)颗粒...\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t开始生成(圆形)颗粒..." << endl;
+        }
         //----Get sheet start point's coordinate
         NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
         double x0 = setPoint1->Coordinates().X;
@@ -1152,43 +1180,140 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
         double xSheetCenter = setPoint1->Coordinates().X + Porous2D::expressionFaceLength->Value() / 2.0;
         double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::expressionFaceWidth->Value() / 2.0;
         double zSheetCenter = setPoint1->Coordinates().Z;
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t片体初始点：\tx: %f\ty: %f\tz: %f\n",x0,y0,z0);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t片体中心点：\tx: %f\ty: %f\tz: %f\n",xSheetCenter,ySheetCenter,zSheetCenter);
+            UF_UI_write_listing_window(tempString);
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t片体初始点：\tx: " << x0 << "\ty: " << y0 << "\tz : " << z0 << endl;
+            Porous2D::outf << "->\t片体中心点：\tx: " << xSheetCenter << "\ty: " << ySheetCenter << "\tz : " << zSheetCenter << endl;
+        }
         //----Get porous zone boundary start point coordinary
         NXOpen::Point* pointPorousZoneStart;
         double xZoneStart, yZoneStart, zZoneStart;
         double zoneLength, zoneWidth;
+        bool changeLenWid = false;
         if (Porous2D::toggleOutFluid->Value() == false)
         {
-            double xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-            double yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-            double zZoneStart = zSheetCenter;
+            xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+            yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+            zZoneStart = zSheetCenter;
             zoneLength = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
             zoneWidth = zoneLength;
+            if (Porous2D::expressionFaceLength->Value() < Porous2D::expressionFaceWidth->Value())
+            {
+                changeLenWid = true;
+            }
+            //----Print process to info window
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                UF_UI_write_listing_window("->\t流动形式：内流\n");
+                char tempString[256];
+                std::sprintf(tempString, "->\t介质区初始点：\tx: %f\ty: %f\tz: %f\n",xZoneStart,yZoneStart,zZoneStart);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t介质区长：\t%f\t介质区宽：\t%f\n",zoneLength,zoneWidth);
+                UF_UI_write_listing_window(tempString);
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t流动形式：内流" << endl;
+                Porous2D::outf << "->\t介质区初始点：\tx: " << xZoneStart << "\ty: " << yZoneStart << "\tz : " << zZoneStart << endl;
+                Porous2D::outf << "->\t介质区长：\t" << zoneLength << "\t介质区宽：" << zoneWidth << endl;
+            }
         }
         else
         {
-            double xZoneStart = x0;
-            double yZoneStart = y0;
-            double zZoneStart = z0;
+            xZoneStart = x0;
+            yZoneStart = y0;
+            zZoneStart = z0;
             zoneLength = max(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
             zoneWidth = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+            if (Porous2D::expressionFaceLength->Value() < Porous2D::expressionFaceWidth->Value())
+            {
+                changeLenWid = true;
+            }
+            //----Print process to info window
+            if (Porous2D::togglePrintInfo->Value() == true)
+            {
+                UF_UI_write_listing_window("->\t流动形式：外流\n");
+                char tempString[256];
+                std::sprintf(tempString, "->\t介质区初始点：\tx: %f\ty: %f\tz: %f\n",xZoneStart,yZoneStart,zZoneStart);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t介质区长：\t%f\t介质区宽：\t%f\n",zoneLength,zoneWidth);
+                UF_UI_write_listing_window(tempString);
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                Porous2D::outf << "->\t流动形式：外流" << endl;
+                Porous2D::outf << "->\t介质区初始点：\tx: " << xZoneStart << "\ty: " << yZoneStart << "\tz : " << zZoneStart << endl;
+                Porous2D::outf << "->\t介质区长：\t" << zoneLength << "\t介质区宽：\t" << zoneWidth << endl;
+            }
         }
         //----Define local parameters
         double ratio = Porous2D::doublePorousRatio->Value();
         double diameter = Porous2D::expressionParticleSize->Value();
         //----Compute colum of particle square
-        int numSquare = floor(sqrt(zoneLength * zoneWidth * (1.0 - ratio) * 4.0 / PI / (diameter * diameter)));
-        double particleLength = floor(sqrt(zoneLength * zoneWidth / numSquare));
+        int numSquare = floor(zoneLength * zoneWidth * (1.0 - ratio) * 4.0 / PI / (diameter * diameter));
+        double particleLength = sqrt(PI * diameter * diameter / (4.0 * (1.0 - ratio)));
         int rowSquare = floor(zoneWidth / particleLength);
-        int columeSquare = floor(numSquare / rowSquare);
+        int columeSquare = floor(zoneLength / particleLength);
         Porous2D::particleNumber = rowSquare * columeSquare;
         double rowGap = zoneWidth / (double)rowSquare - diameter;
         double columeGap = zoneLength / (double)columeSquare - diameter;
-        double rowBoderGap = rowGap / 2.0;
-        double columeBoderGap = columeGap / 2.0;
+        double rowBoderGap = (zoneWidth - rowSquare * particleLength ) / 2.0;
+        double columeBoderGap = (zoneLength - columeSquare * particleLength) / 2.0;
+        double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
         //----Compute start point coordination
-        double xStartPoint = xZoneStart + columeBoderGap + diameter / 2.0;
-        double yStartPoint = yZoneStart + rowBoderGap + diameter / 2.0;
-        double zStartPoint = zZoneStart;
+        double xStartPoint, yStartPoint, zStartPoint;
+        if (changeLenWid)
+        {
+            xStartPoint = xZoneStart + rowBoderGap + particleLength / 2.0;
+            yStartPoint = yZoneStart + columeBoderGap + particleLength / 2.0;
+            zStartPoint = zZoneStart;
+        }
+        else
+        {
+            xStartPoint = xZoneStart + columeBoderGap + particleLength / 2.0;
+            yStartPoint = yZoneStart + rowBoderGap + particleLength / 2.0;
+            zStartPoint = zZoneStart;
+        }
+        //----Print process to info window
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            std::sprintf(tempString, "->\t孔隙率：\t%f\t颗粒直径：\t%f\n",ratio,diameter);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t颗粒数：\t%d\t行间距：\t%f\t列间距：\t%f\n",Porous2D::particleNumber,rowGap,columeGap);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t行边间隙：\t%f\t列边间隙：\t%f\n",rowBoderGap,columeBoderGap);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t颗粒中心起始点：\tx: %f\ty: %f\tz: %f\n",xStartPoint,yStartPoint,zStartPoint);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\t实际孔隙率：\t%f\n",realPorosity);
+            UF_UI_write_listing_window(tempString);
+            UF_UI_write_listing_window("->\t颗粒圆心坐标：\n");
+            UF_UI_write_listing_window("->\t[row,colum]\tx\ty\tz\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t孔隙率：\t" << ratio << "\t颗粒直径：\t" << diameter << endl;
+            Porous2D::outf << "->\t颗粒数：\t" << Porous2D::particleNumber << "\t行间距：\t" << rowGap << "\t列间距：\t" << columeGap << endl;
+            Porous2D::outf << "->\t行边间隙：\t" << rowBoderGap << "\t列边间隙：\t" << columeBoderGap << endl;
+            Porous2D::outf << "->\t颗粒中心起始点：\tx: " << xStartPoint << "\ty: " << yStartPoint << "\tz : " << zStartPoint << endl;
+            Porous2D::outf << "->\t实际孔隙率：\t" << realPorosity << endl;
+            Porous2D::outf << "->\t颗粒圆心坐标:" << endl;
+            Porous2D::outf << "->\t[row,colum]\tx\ty\tz" << endl;
+        }
         //Generate circle particle curves
         for (int i = 0; i < rowSquare; i++)
         {
@@ -1200,8 +1325,19 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
                 associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
                 //Get particles' center points 
                 //----Create  circle center points
-                double x = xStartPoint + (diameter + columeGap) * j;
-                double y = yStartPoint + (diameter + rowGap) * i;
+                double x, y, z;
+                if (changeLenWid)
+                {
+                    y = yStartPoint + (particleLength) * j;
+                    x = xStartPoint + (particleLength) * i;
+                    z = zStartPoint;
+                }
+                else
+                {
+                    x = xStartPoint + (particleLength) * j;
+                    y = yStartPoint + (particleLength) * i;
+                    z = zStartPoint;
+                }
                 NXOpen::Scalar* scalarX1(NULL);
                 scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                 NXOpen::Scalar* scalarY1(NULL);
@@ -1215,6 +1351,18 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
                 //----Create helpPoints for trim section
                 Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
                 Porous2D::helpPointCollector.push_back(helpPoint);
+                //----Print center points coordination of cellulose
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    char tempString[256];
+                    std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                    UF_UI_write_listing_window(tempString);
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                }
                 //----Set circle curves' genaration plane
                 NXOpen::Vector3d Vector1;
                 Vector1 = { 0.0, 0.0, 1.0 };
@@ -1241,6 +1389,35 @@ void Porous2D::GenSquare(NXOpen::Part* workPart)
                 //Free memory
                 associativeArcBuilder1->Destroy();
             }
+        }
+        //Print length of arcFeatureCollector and particleObject
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            char tempString[256];
+            int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+            int parObjectNum = Porous2D::particleObject.size();
+            int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+            int parObjectMax = Porous2D::particleObject.max_size();
+            std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
+            UF_UI_write_listing_window(tempString);
+            std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
+            UF_UI_write_listing_window(tempString);
+            UF_UI_write_listing_window("->\t完成中心点与直径成圆！\n");
+            UF_UI_write_listing_window("->\t圆线存储...\n");
+            UF_UI_write_listing_window("->\t内存释放！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+            int parObjectNum = Porous2D::particleObject.size();
+            int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+            int parObjectMax = Porous2D::particleObject.max_size();
+            Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
+            Porous2D::outf << "->\tarcFeatureCapacity:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
+            Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+            Porous2D::outf << "->\t圆线存储..." << endl;
+            Porous2D::outf << "->\t内存释放！" << endl;
         }
     }
     else if ((std::string)(enumParticleShape->ValueAsString()).GetText() == "Square")
@@ -1284,6 +1461,8 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             {
                 Porous2D::outf << "->\t------------------纸幅专用生成方式------------------" << endl;
             }
+            //----Set compress ratio
+            double comRatio = Porous2D::expressionComRatio->Value();
             //----Get sheet start point's coordinate
             NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
             double x0 = setPoint1->Coordinates().X;
@@ -1299,15 +1478,15 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             }
             //----Get sheet center point's coordinate
             double xSheetCenter = setPoint1->Coordinates().X + Porous2D::sheetLength / 2.0;
-            double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::sheetWidth / 2.0;
+            double ySheetCenter = setPoint1->Coordinates().Y + Porous2D::sheetWidth * comRatio / 2.0;
             double zSheetCenter = setPoint1->Coordinates().Z;
             //----Get porous zone boundary start point coordinary
             NXOpen::Point* pointPorousZoneStart;
             double xZoneStart = xSheetCenter - Porous2D::sheetLength / 2.0;
-            double yZoneStart = ySheetCenter - Porous2D::sheetWidth / 2.0;
+            double yZoneStart = ySheetCenter - Porous2D::sheetWidth * comRatio / 2.0;
             double zZoneStart = zSheetCenter;
             double zoneLength = Porous2D::sheetLength;
-            double zoneWidth = Porous2D::sheetWidth;
+            double zoneWidth = Porous2D::sheetWidth * comRatio;
             //----Define local parameters
             double ratio = Porous2D::doublePorousRatio->Value();
             double diameter = Porous2D::expressionCelDiameter->Value();
@@ -1315,14 +1494,30 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             double gap = sqrt(PI / 2.0 / sqrt(3.0) / (1.0 -ratio)) * diameter;
             int rowHexagon = floor(Porous2D::sheetWidth / (sqrt(3.0) / 2.0 * gap));
             int columHexagon = floor(zoneLength / gap);
-//            Porous2D::particleNumber = floor(zoneLength * Porous2D::sheetWidth * (1.0 - ratio) * 4.0 / PI / (diameter * diameter));
             Porous2D::particleNumber = rowHexagon * columHexagon;
             double rowBoderGap = (zoneLength - gap * (columHexagon + 0.5)) / 2.0;
-            double colBoderGap = (Porous2D::sheetWidth - rowHexagon * gap * sqrt(3.0) / 2.0) / 2.0;
-            double realRatio = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
+            double colBoderGap = (Porous2D::sheetWidth - rowHexagon * gap * sqrt(3.0) / 2.0)  * comRatio / 2.0;
+            double origPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * Porous2D::sheetWidth)) * 100.0;
+            double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
+            //----Check compress ratio
+            double minComRatio = (4.0 * diameter * diameter - gap * gap) / (3.0 * gap * gap);
+            if (comRatio < minComRatio)
+            {
+                char msg[256];
+                sprintf(msg, "!!!Error: Compressor ratio is too small!");
+                uc1601(msg,1);
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    UF_UI_write_listing_window("->!!!Error: Compressor ratio is too small!");
+                }
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->!!!Error: Compressor ratio is too small!" << endl;
+                }
+            }
             //----Compute start point coordination
             double xStartPoint = xZoneStart + rowBoderGap + gap / 2.0;
-            double yStartPoint = yZoneStart + colBoderGap + gap / 2.0;
+            double yStartPoint = yZoneStart + colBoderGap + gap  * comRatio * sqrt(3.0) / 4.0;
             double zStartPoint = zZoneStart;
             //----Print process to info window
             char tempString[256];
@@ -1331,9 +1526,9 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                 UF_UI_write_listing_window("->\t纸幅基本信息：\n");
                 std::sprintf(tempString, "->\t纸幅基重:%f (g/m2)\n", Porous2D::expressionBasisWeight->Value());
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t成纸干度:%f (%)\n", Porous2D::expressionDryContentFinal->Value());
+                std::sprintf(tempString, "->\t成纸干度:%f (%%)\n", Porous2D::expressionDryContentFinal->Value());
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t当前干度:%f (%)\n", Porous2D::expressionDryContentNow->Value());
+                std::sprintf(tempString, "->\t当前干度:%f (%%)\n", Porous2D::expressionDryContentNow->Value());
                 UF_UI_write_listing_window(tempString);
                 std::sprintf(tempString, "->\t纸幅厚度:%f (mm)\n", Porous2D::sheetWidth);
                 UF_UI_write_listing_window(tempString);
@@ -1343,15 +1538,21 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                 UF_UI_write_listing_window(tempString);
                 std::sprintf(tempString, "->\t纤维长度密度:%f (g/m)\n", Porous2D::expressionLenDensity->Value());
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t行数:%d\t纤维行间距:%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap);
+                std::sprintf(tempString, "->\t行数:%d\t纤维行间距:%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap * comRatio);
                 UF_UI_write_listing_window(tempString);
                 std::sprintf(tempString, "->\t列数:%d\t纤维列间距:%f (mm)\n", columHexagon, gap);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t纤维数量:%d \n", Porous2D::particleNumber);
+                std::sprintf(tempString, "->\t纤维数量：%d\n", Porous2D::particleNumber);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t设计孔隙率:%f (\%)\n", ratio * 100.0);
+                std::sprintf(tempString, "->\t设计孔隙率:%f (%%)\n", ratio * 100.0);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t实际孔隙率:%f (\%)\n", realRatio);
+                std::sprintf(tempString, "->\t压缩前孔隙率:%f (%%)\n", origPorosity);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t压缩系数:%f\n", comRatio);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t实际孔隙率:%f (%%)\n", realPorosity);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\t最小压缩系数:%f\n", minComRatio);
                 UF_UI_write_listing_window(tempString);
                 UF_UI_write_listing_window("->\t纤维圆心坐标：\n");
                 UF_UI_write_listing_window("->\t[row,colum]\tx\ty\tz\n");
@@ -1360,16 +1561,20 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             if (Porous2D::toggleWriteFile->Value() == true)
             {
                 Porous2D::outf << "->\t纸幅基本信息：\n" << "->\t纸幅基重:" << Porous2D::expressionDryContentFinal->Value() << " (%)" << endl;
+                Porous2D::outf << "->\t成纸干度:" << Porous2D::expressionDryContentFinal->Value() << " (%)" << endl;
                 Porous2D::outf << "->\t当前干度:" << Porous2D::expressionDryContentNow->Value() << " (%)" << endl;
                 Porous2D::outf << "->\t纸幅厚度:" << Porous2D::sheetWidth << " (mm)" << endl;
                 Porous2D::outf << "->\t纤维直径:" << Porous2D::expressionCelDiameter->Value() << " (mm)" << endl;
                 Porous2D::outf << "->\t纤维长度:" << Porous2D::expressionCelLength->Value() << " (mm)" << endl;
                 Porous2D::outf << "->\t纤维长度密度:" << Porous2D::expressionLenDensity->Value() << " (g/m)" << endl;
-                Porous2D::outf << "->\t行数:" << rowHexagon << "\t纤维行间距: " << sqrt(3.0)/2.0*gap << " (mm)" << endl;
-                Porous2D::outf << "->\t列数:" << columHexagon << "\t纤维行间距: " << gap << " (mm)" << endl;
+                Porous2D::outf << "->\t行数:" << rowHexagon << "\t纤维行间距: " << sqrt(3.0)/2.0*gap*comRatio << " (mm)" << endl;
+                Porous2D::outf << "->\t列数:" << columHexagon << "\t纤维列间距: " << gap << " (mm)" << endl;
                 Porous2D::outf << "->\t纤维数量:" << Porous2D::particleNumber << endl;
                 Porous2D::outf << "->\t设计孔隙率:" << ratio * 100.0 << " (%)" << endl;
-                Porous2D::outf << "->\t实际孔隙率:" << realRatio << " (%)" << endl;
+                Porous2D::outf << "->\t压缩前孔隙率:" << origPorosity << " (%)" << endl;
+                Porous2D::outf << "->\t压缩系数:" << comRatio <<  endl;
+                Porous2D::outf << "->\t实际孔隙率:" << realPorosity << " (%)" << endl;
+                Porous2D::outf << "->\t最小压缩系数:" << minComRatio <<  endl;
                 Porous2D::outf << "->\t纤维圆心坐标:" << endl;
                 Porous2D::outf << "->\t[row,colum]\tx\ty\tz" << endl;
             }
@@ -1384,7 +1589,7 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     //Get particles' center points 
                     //----Create  circle center points
                     double x = xStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
-                    double y = yStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                    double y = yStartPoint + sqrt(3.0) * gap * comRatio / 2.0 * i;
                     double z = zStartPoint;
                     NXOpen::Scalar* scalarX1(NULL);
                     scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
@@ -1452,6 +1657,25 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                 UF_UI_write_listing_window(tempString);
                 std::sprintf(tempString, "->\tarcFeatureCap:\t%d\tparticleObjectCap:\t%d\n",arcFeatureCap,parObjectCap);
                 UF_UI_write_listing_window(tempString);
+                UF_UI_write_listing_window("->\t完成中心点与直径成圆！\n");
+                UF_UI_write_listing_window("->\t圆线存储...\n");
+                UF_UI_write_listing_window("->\t内存释放！\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                int parObjectNum = Porous2D::particleObject.size();
+                int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                int parObjectMax = Porous2D::particleObject.max_size();
+                int arcFeatureCap = Porous2D::arcFeatureCollector.capacity();
+                int parObjectCap = Porous2D::particleObject.capacity();
+                Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
+                Porous2D::outf << "->\tarcFeatureMax:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
+                Porous2D::outf << "->\tarcFeatureCap:\t" << arcFeatureCap << "\tparticleObjectCapacity:" << parObjectCap << endl;
+                Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+                Porous2D::outf << "->\t圆线存储..." << endl;
+                Porous2D::outf << "->\t内存释放！" << endl;
             }
         }
         else
@@ -1466,6 +1690,8 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             {
                 Porous2D::outf << "->\t------------------普通介质生成方式------------------" << endl;
             }
+            //----Set compress ratio
+            double comRatio = Porous2D::expressionComRatio->Value();
             //----Get sheet start point's coordinate
             NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
             double x0 = setPoint1->Coordinates().X;
@@ -1477,40 +1703,137 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
             double zSheetCenter = setPoint1->Coordinates().Z;
             //----Get porous zone boundary start point coordinary
             NXOpen::Point* pointPorousZoneStart;
-            double xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-            double yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
-            double zZoneStart = zSheetCenter;
-            double zoneLength = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+            double xZoneStart, yZoneStart, zZoneStart;
+            double zoneLength, zoneWidth;
+            bool changeLenWid = false;
+            bool outFluid = false;
+            //Judge hexagon direction
+            double xStartPoint, yStartPoint, zStartPoint;
+            if (Porous2D::toggleOutFluid->Value() == false)
+            {
+                xZoneStart = xSheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+                yZoneStart = ySheetCenter - min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value()) / 2.0;
+                zZoneStart = zSheetCenter;
+                zoneLength = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+                if (Porous2D::expressionFaceLength->Value() < Porous2D::expressionFaceWidth->Value())
+                {
+                    changeLenWid = true;
+                }
+                zoneWidth = zoneLength;
+                //----Print process to info window
+                if (Porous2D::togglePrintInfo->Value() == true)
+                {
+                    UF_UI_write_listing_window("->\t流动形式：内流\n");
+                    char tempString[256];
+                    std::sprintf(tempString, "->\t介质区初始点：\tx: %f\ty: %f\tz: %f\n",xZoneStart,yZoneStart,zZoneStart);
+                    UF_UI_write_listing_window(tempString);
+                    std::sprintf(tempString, "->\t介质区长：\t%f\t介质区宽：\t%f\n",zoneLength,zoneWidth);
+                    UF_UI_write_listing_window(tempString);
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->\t流动形式：内流" << endl;
+                    Porous2D::outf << "->\t介质区初始点：\tx: " << xZoneStart << "\ty: " << yZoneStart << "\tz : " << zZoneStart << endl;
+                    Porous2D::outf << "->\t介质区长：\t" << zoneLength << "\t介质区宽：" << zoneWidth << endl;
+                }
+            }
+            else
+            {
+                outFluid = true;
+                xZoneStart = x0;
+                yZoneStart = y0;
+                zZoneStart = z0;
+                zoneLength = max(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+                Porous2D::sheetWidth = min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+                zoneWidth = comRatio * min(Porous2D::expressionFaceLength->Value(), Porous2D::expressionFaceWidth->Value());
+                if (Porous2D::expressionFaceLength->Value() < Porous2D::expressionFaceWidth->Value())
+                {
+                    changeLenWid = true;
+                }
+                //----Print process to info window
+                if (Porous2D::togglePrintInfo->Value() == true)                             
+                {
+                    UF_UI_write_listing_window("->\t流动形式：外流\n");
+                    char tempString[256];
+                    std::sprintf(tempString, "->\t介质区初始点：\tx: %f\ty: %f\tz: %f\n",xZoneStart,yZoneStart,zZoneStart);
+                    UF_UI_write_listing_window(tempString);
+                    std::sprintf(tempString, "->\t介质区长：\t%f\t介质区宽：\t%f\n",zoneLength,zoneWidth);
+                    UF_UI_write_listing_window(tempString);
+                }
+                //----Print process to log file
+                if (Porous2D::toggleWriteFile->Value() == true)
+                {
+                    Porous2D::outf << "->\t流动形式：外流" << endl;
+                    Porous2D::outf << "->\t介质区初始点：\tx: " << xZoneStart << "\ty: " << yZoneStart << "\tz : " << zZoneStart << endl;
+                    Porous2D::outf << "->\t介质区长：\t" << zoneLength << "\t介质区宽：\t" << zoneWidth << endl;
+                }
+            }
             //----Define local parameters
             double ratio = Porous2D::doublePorousRatio->Value();
             double diameter = Porous2D::expressionParticleSize->Value();
+            Porous2D::particleDiameter = diameter;
             //----Compute colum of particle hexagon
-            int rowHexagon = floor(sqrt(zoneLength * zoneLength * (1.0 - ratio) * 4.0 / PI / (diameter * diameter)));
-            Porous2D::particleNumber = rowHexagon * rowHexagon;
-            double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneLength)) * 100.0;
-            double gap = 2.0 * zoneLength / (2.0 * (double)rowHexagon + 1.0) - diameter;
-            double boderGap = gap / 2.0;
-            double extraBoderGap = (diameter + gap) * ((2.0 - sqrt(3.0)) * rowHexagon / 2.0 + (sqrt(3.0) - 1.0) / 2.0) / 2.0;
+            double gap = sqrt(PI / 2.0 / sqrt(3.0) / (1.0 -ratio)) * diameter;
+            int rowHexagon = floor(zoneWidth / (sqrt(3.0) / 2.0 * gap));
+            int columeHexagon = floor(zoneLength / gap);
+            Porous2D::particleNumber = rowHexagon * columeHexagon;
+            double rowBoderGap = (zoneLength - gap * (columeHexagon + 0.5)) / 2.0;
+            double colBoderGap = (zoneWidth - rowHexagon * gap * sqrt(3.0) / 2.0) / 2.0;
+            double realPorosity = (1.0 - Porous2D::particleNumber * PI * diameter * diameter / 4.0 / (zoneLength * zoneWidth)) * 100.0;
+            //----Compute start point coordination
+            if (changeLenWid)
+            {
+                //Compute start point coordination
+                if (outFluid)
+                {
+                    xStartPoint = xZoneStart + colBoderGap + gap * sqrt(3.0) / 4.0;
+                    yStartPoint = yZoneStart + rowBoderGap + gap / 2.0;
+                    zStartPoint = zZoneStart;
+                }
+                else
+                {
+                    xStartPoint = xZoneStart + rowBoderGap + gap / 2.0;
+                    yStartPoint = yZoneStart + colBoderGap + gap * sqrt(3.0) / 4.0;
+                    zStartPoint = zZoneStart;
+                }
+            }
+            else
+            {
+                //Compute start point coordination
+                if (outFluid)
+                {
+                    xStartPoint = xZoneStart + rowBoderGap + gap / 2.0;
+                    yStartPoint = yZoneStart + colBoderGap + gap * sqrt(3.0) / 4.0;
+                    zStartPoint = zZoneStart;
+                }
+                else
+                {
+                    xStartPoint = xZoneStart + colBoderGap + gap * sqrt(3.0) / 4.0;
+                    yStartPoint = yZoneStart + rowBoderGap + gap / 2.0;
+                    zStartPoint = zZoneStart;
+                }
+            }
             //----Print process to info window
             char tempString[256];
             if (Porous2D::togglePrintInfo->Value() == true)
             {
                 UF_UI_write_listing_window("->\t介质基本信息：\n");
-                std::sprintf(tempString, "->\t介质长度:%f (mm)\n", Porous2D::expressionFaceLength->Value());
+                std::sprintf(tempString, "->\t介质长度：%f (mm)\n", Porous2D::expressionFaceLength->Value());
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t介质宽度:%f (mm)\n", Porous2D::expressionFaceWidth->Value());
+                std::sprintf(tempString, "->\t介质宽度：%f (mm)\n", Porous2D::expressionFaceWidth->Value());
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t设计孔隙率:%f (\%)\n", ratio * 100.0);
+                std::sprintf(tempString, "->\t设计孔隙率：%f (%%)\n", ratio * 100.0);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t实际孔隙率:%f (\%)\n", realPorosity);
+                std::sprintf(tempString, "->\t实际孔隙率：%f (%%)\n", realPorosity);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t行数:%d\t纤维行间距:%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap);
+                std::sprintf(tempString, "->\t行数：%d\t纤维行间距：%f (mm)\n", rowHexagon, sqrt(3.0)/2.0*gap);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t列数:%d\t纤维列间距:%f (mm)\n", rowHexagon, gap);
+                std::sprintf(tempString, "->\t列数：%d\t纤维列间距：%f (mm)\n", rowHexagon, gap);
                 UF_UI_write_listing_window(tempString);
-                std::sprintf(tempString, "->\t纤维数量:%d \n", Porous2D::particleNumber);
+                std::sprintf(tempString, "->\t颗粒数量：%d\t颗粒直径：%f\n", Porous2D::particleNumber, diameter);
                 UF_UI_write_listing_window(tempString);
-                UF_UI_write_listing_window("->\t纤维圆心坐标：\n");
+                UF_UI_write_listing_window("->\t颗粒圆心坐标：\n");
                 UF_UI_write_listing_window("->\t[row,colum]\tx\ty\tz\n");
             }
             //----Print process to log file
@@ -1520,211 +1843,141 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                 Porous2D::outf << "->\t介质宽度:" << Porous2D::expressionFaceWidth->Value() << " (mm)" << endl;
                 Porous2D::outf << "->\t设计孔隙率:" << ratio * 100.0 << " (%)" << endl;
                 Porous2D::outf << "->\t实际孔隙率:" << realPorosity << " (%)" << endl;
-                Porous2D::outf << "->\t行数:" << rowHexagon << "\t纤维行间距: " << sqrt(3.0)/2.0*gap << " (mm)" << endl;
-                Porous2D::outf << "->\t列数:" << rowHexagon << "\t纤维行间距: " << gap << " (mm)" << endl;
-                Porous2D::outf << "->\t纤维数量:" << Porous2D::particleNumber << endl;
-                Porous2D::outf << "->\t纤维圆心坐标:" << endl;
+                Porous2D::outf << "->\t行数:" << rowHexagon << "\t颗粒行间距: " << sqrt(3.0)/2.0*gap << " (mm)" << endl;
+                Porous2D::outf << "->\t列数:" << rowHexagon << "\t颗粒列间距: " << gap << " (mm)" << endl;
+                Porous2D::outf << "->\t颗粒数量:" << Porous2D::particleNumber << "\t颗粒直径：" << diameter << endl;
+                Porous2D::outf << "->\t颗粒圆心坐标:" << endl;
                 Porous2D::outf << "->\t[row,colum]\tx\ty\tz" << endl;
             }
             //Generate circle particle curves
-            //Judge hexagon direction
-            if (Porous2D::expressionFaceLength->Value() <= Porous2D::expressionFaceWidth->Value())
+            for (int i = 0; i < rowHexagon; i++)
             {
-                //Compute start point coordination
-                double xStartPoint = xZoneStart + boderGap + diameter / 2.0;
-                double yStartPoint = yZoneStart + boderGap + extraBoderGap + diameter / 2.0;
-                double zStartPoint = zZoneStart;
-                for (int i = 0; i < rowHexagon; i++)                                                                                                                                                                                                            
+                for (int j = 0; j < columeHexagon; j++)
                 {
-                    for (int j = 0; j < rowHexagon; j++)
+                    //Initialize AssociativeArcBuiler
+                    NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
+                    NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
+                    associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
+                    //Get particles' center points 
+                    //----Create  circle center points
+                    double x, y, z;
+                    if (changeLenWid)
                     {
-                        //Initialize AssociativeArcBuiler
-                        NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
-                        NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
-                        associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
-                        //Get particles' center points 
-                        //----Create  circle center points
-                        double x = xStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
-                        double y = yStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
-                        double z = zStartPoint;
-                        NXOpen::Scalar* scalarX1(NULL);
-                        scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Scalar* scalarY1(NULL);
-                        scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Scalar* scalarZ1(NULL);
-                        scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Point* circleCorePoint1;
-                        circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        Porous2D::centerPointCollector.push_back(circleCorePoint1);
-                        //Set AssociativeArcBuilder parameters
-                        //----Create helpPoints for trim section
-                        Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
-                        Porous2D::helpPointCollector.push_back(helpPoint);
-                        //----Print center points coordination of cellulose
-                        if (Porous2D::togglePrintInfo->Value() == true)
+                        if (outFluid)
                         {
-                            std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
-                            UF_UI_write_listing_window(tempString);
+                            y = yStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
+                            x = xStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                            z = zStartPoint;
                         }
-                        //----Print process to log file
-                        if (Porous2D::toggleWriteFile->Value() == true)
+                        else
                         {
-                            Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                            x = xStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
+                            y = yStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                            z = zStartPoint;
                         }
-                        //----Set circle curves' genaration plane
-                        NXOpen::Vector3d Vector1;
-                        Vector1 = { 0.0, 0.0, 1.0 };
-                        //----Open switch to set plane normal direction
-                        NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
-                        planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
-                        associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
-                        //----Set AssociativeArcBuilder required parameters
-                        associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
-                        associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
-                        associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
-                        associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
-                        associativeArcBuilder1->Diameter()->SetValue(Porous2D::expressionParticleSize->Value());
-                        associativeArcBuilder1->Limits()->SetFullCircle(true);
-                        //Create circle particle curves
-                        NXOpen::NXObject* nXObjectCircle;
-                        nXObjectCircle = associativeArcBuilder1->Commit();
-                        //Pass to global parameters
-                        //----Get particle curves' objects
-                        Porous2D::particleObject.push_back(nXObjectCircle);
-                        //----Get particle curves' features
-                        Porous2D::arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
-                        Porous2D::arcFeatureCollector.push_back(arcFeature);
-                        //Free memory
-                        associativeArcBuilder1->Destroy();
                     }
-                }
-                //Print length of arcFeatureCollector and particleObject
-                if (Porous2D::togglePrintInfo->Value() == true)
-                {
-                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
-                    int parObjectNum = Porous2D::particleObject.size();
-                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
-                    int parObjectMax = Porous2D::particleObject.max_size();
-                    std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
-                    UF_UI_write_listing_window(tempString);
-                    std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
-                    UF_UI_write_listing_window(tempString);
-                    UF_UI_write_listing_window("->\t完成中心点与直径成圆！");
-                    UF_UI_write_listing_window("->\t圆线存储...");
-                    UF_UI_write_listing_window("->\t内存释放！");
-                }
-                //----Print process to log file
-                if (Porous2D::toggleWriteFile->Value() == true)
-                {
-                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
-                    int parObjectNum = Porous2D::particleObject.size();
-                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
-                    int parObjectMax = Porous2D::particleObject.max_size();
-                    Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
-                    Porous2D::outf << "->\tarcFeatureCapacity:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
-                    Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
-                    Porous2D::outf << "->\t圆线存储..." << endl;
-                    Porous2D::outf << "->\t内存释放！" << endl;
+                    else
+                    {
+                        if (outFluid)
+                        {
+                            x = xStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
+                            y = yStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                            z = zStartPoint;
+                        }
+                        else
+                        {
+                            y = yStartPoint + (gap / 2.0) * abs(sin((double)i / 2.0 * PI)) + gap * j;
+                            x = xStartPoint + sqrt(3.0) * gap / 2.0 * i;
+                            z = zStartPoint;
+                        }
+                    }
+
+                    NXOpen::Scalar* scalarX1(NULL);
+                    scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY1(NULL);
+                    scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ1(NULL);
+                    scalarZ1 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Point* circleCorePoint1;
+                    circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                    //----Print center points coordination of cellulose
+                    if (Porous2D::togglePrintInfo->Value() == true)
+                    {
+                        std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                        UF_UI_write_listing_window(tempString);
+                    }
+                    //----Print process to log file
+                    if (Porous2D::toggleWriteFile->Value() == true)
+                    {
+                        Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                    }
+                    //Set AssociativeArcBuilder parameters
+                    //----Create helpPoints for trim section
+                    Porous2D::helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
+                    Porous2D::helpPointCollector.push_back(helpPoint);
+                    //----Set circle curves' genaration plane
+                    NXOpen::Vector3d Vector1;
+                    Vector1 = { 0.0, 0.0, 1.0 };
+                    //----Open switch to set plane normal direction
+                    NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
+                    planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
+                    associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
+                    //----Set AssociativeArcBuilder required parameters
+                    associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
+                    associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
+                    associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
+                    associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
+                    associativeArcBuilder1->Diameter()->SetValue(Porous2D::particleDiameter);
+                    associativeArcBuilder1->Limits()->SetFullCircle(true);
+                    //Create circle particle curves
+                    NXOpen::NXObject* nXObjectCircle;
+                    nXObjectCircle = associativeArcBuilder1->Commit();
+                    //Pass to global parameters
+                    //----Get particle curves' objects
+                    Porous2D::particleObject.push_back(nXObjectCircle);
+                    //----Get particle curves' features
+                    Porous2D::arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
+                    Porous2D::arcFeatureCollector.push_back(arcFeature);
+                    //Free memory
+                    associativeArcBuilder1->Destroy();
                 }
             }
-            else
+            //Print length of arcFeatureCollector and particleObject
+            if (Porous2D::togglePrintInfo->Value() == true)
             {
-                //Compute start point coordination
-                double xStartPoint = xZoneStart + boderGap + extraBoderGap + diameter / 2.0;
-                double yStartPoint = yZoneStart + boderGap + diameter / 2.0;
-                double zStartPoint = zZoneStart;
-                for (int i = 0; i < rowHexagon; i++)                                                                                                                                                                                                            
-                {
-                    for (int j = 0; j < rowHexagon; j++)
-                    {
-                        //Initialize AssociativeArcBuiler
-                        NXOpen::Features::AssociativeArc* nullNXOpen_Features_AssociativeArc(NULL);
-                        NXOpen::Features::AssociativeArcBuilder* associativeArcBuilder1;
-                        associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
-                        //Get particles' center points 
-                        //----Create  circle center points
-                        double x = xStartPoint + sqrt(3.0) * (diameter + gap) / 2.0 * i;
-                        double y = yStartPoint + ((diameter + gap) / 2.0) * abs(sin((double)i / 2.0 * PI)) + (diameter + gap) * j;
-                        double z = zStartPoint;
-                        NXOpen::Scalar* scalarX1(NULL);
-                        scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Scalar* scalarY1(NULL);
-                        scalarY1 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Scalar* scalarZ1(NULL);
-                        scalarZ1 = workPart->Scalars()->CreateScalar(zStartPoint, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        NXOpen::Point* circleCorePoint1;
-                        circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
-                        Porous2D::centerPointCollector.push_back(circleCorePoint1);
-                        //Set AssociativeArcBuilder parameters
-                        //----Create helpPoints for trim section
-                        helpPoint = { circleCorePoint1->Coordinates().X + diameter / 2.0 , circleCorePoint1->Coordinates().Y, circleCorePoint1->Coordinates().Z };
-                        helpPointCollector.push_back(helpPoint);
-                        //----Print center points coordination of cellulose
-                        if (Porous2D::togglePrintInfo->Value() == true)
-                        {
-                            std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
-                            UF_UI_write_listing_window(tempString);
-                        }
-                        //----Print process to log file
-                        if (Porous2D::toggleWriteFile->Value() == true)
-                        {
-                            Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
-                        }
-                        //----Set circle curves' genaration plane
-                        NXOpen::Vector3d Vector1;
-                        Vector1 = { 0.0, 0.0, 1.0 };
-                        //----Open switch to set plane normal direction
-                        NXOpen::GeometricUtilities::SupportPlaneData* planeData(associativeArcBuilder1->SupportPlaneData());
-                        planeData->SetSupportPlaneLockStatus(NXOpen::GeometricUtilities::SupportPlaneData::LockPlaneStatus::LockPlaneStatusCenterPointDirection);
-                        associativeArcBuilder1->SetCenterRadiusLockedPlaneDirection(Vector1);
-                        //----Set AssociativeArcBuilder required parameters
-                        associativeArcBuilder1->SetStartPointOptions(NXOpen::Features::AssociativeArcBuilder::StartOption::StartOptionPoint);
-                        associativeArcBuilder1->SetEndPointOptions(NXOpen::Features::AssociativeArcBuilder::EndOption::EndOptionDiameter);
-                        associativeArcBuilder1->SetType(NXOpen::Features::AssociativeArcBuilder::TypesArcFromCenter);
-                        associativeArcBuilder1->CenterPoint()->SetValue(circleCorePoint1);
-                        associativeArcBuilder1->Diameter()->SetValue(expressionParticleSize->Value());
-                        associativeArcBuilder1->Limits()->SetFullCircle(true);
-                        //Create circle particle curves
-                        NXOpen::NXObject* nXObjectCircle;
-                        nXObjectCircle = associativeArcBuilder1->Commit();
-                        //Pass to global parameters
-                        //----Get particle curves' objects
-                        particleObject.push_back(nXObjectCircle);
-                        //----Get particle curves' features
-                        arcFeature = dynamic_cast<NXOpen::Features::AssociativeArc*>(nXObjectCircle);
-                        arcFeatureCollector.push_back(arcFeature);
-                        //Free memory
-                        associativeArcBuilder1->Destroy();
-                    }
-                }
-                //Print length of arcFeatureCollector and particleObject
-                if (Porous2D::togglePrintInfo->Value() == true)
-                {
-                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
-                    int parObjectNum = Porous2D::particleObject.size();
-                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
-                    int parObjectMax = Porous2D::particleObject.max_size();
-                    std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
-                    UF_UI_write_listing_window(tempString);
-                    std::sprintf(tempString, "->\tarcFeatureCapacity:\t%d\tparticleObjectCapacity:\t%d\n",arcFeatureMax,parObjectMax);
-                    UF_UI_write_listing_window(tempString);
-                    UF_UI_write_listing_window("->\t完成中心点与直径成圆！");
-                    UF_UI_write_listing_window("->\t圆线存储...");
-                    UF_UI_write_listing_window("->\t内存释放！");
-                }
-                //----Print process to log file
-                if (Porous2D::toggleWriteFile->Value() == true)
-                {
-                    int arcFeatureNum = Porous2D::arcFeatureCollector.size();
-                    int parObjectNum = Porous2D::particleObject.size();
-                    int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
-                    int parObjectMax = Porous2D::particleObject.max_size();
-                    Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
-                    Porous2D::outf << "->\tarcFeatureCapacity:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
-                    Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
-                    Porous2D::outf << "->\t圆线存储..." << endl;
-                    Porous2D::outf << "->\t内存释放！" << endl;
-                }
+//                char tempString[256];
+                int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                int parObjectNum = Porous2D::particleObject.size();
+                int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                int parObjectMax = Porous2D::particleObject.max_size();
+                int arcFeatureCap = Porous2D::arcFeatureCollector.capacity();
+                int parObjectCap = Porous2D::particleObject.capacity();
+                std::sprintf(tempString, "->\tarcFeatureNum:\t%d\tparticleObjectNum:\t%d\n",arcFeatureNum,parObjectNum);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\tarcFeatureMax:\t%d\tparticleObjectMax:\t%d\n",arcFeatureMax,parObjectMax);
+                UF_UI_write_listing_window(tempString);
+                std::sprintf(tempString, "->\tarcFeatureCap:\t%d\tparticleObjectCap:\t%d\n",arcFeatureCap,parObjectCap);
+                UF_UI_write_listing_window(tempString);
+                UF_UI_write_listing_window("->\t完成中心点与直径成圆！\n");
+                UF_UI_write_listing_window("->\t圆线存储...\n");
+                UF_UI_write_listing_window("->\t内存释放！\n");
+            }
+            //----Print process to log file
+            if (Porous2D::toggleWriteFile->Value() == true)
+            {
+                int arcFeatureNum = Porous2D::arcFeatureCollector.size();
+                int parObjectNum = Porous2D::particleObject.size();
+                int arcFeatureMax = Porous2D::arcFeatureCollector.max_size();
+                int parObjectMax = Porous2D::particleObject.max_size();
+                int arcFeatureCap = Porous2D::arcFeatureCollector.capacity();
+                int parObjectCap = Porous2D::particleObject.capacity();
+                Porous2D::outf << "->\tarcFeatureNum:\t" << arcFeatureNum << "\tparticleObjectNum:" << parObjectNum << endl;
+                Porous2D::outf << "->\tarcFeatureMax:\t" << arcFeatureMax << "\tparticleObjectCapacity:" << parObjectMax << endl;
+                Porous2D::outf << "->\tarcFeatureCap:\t" << arcFeatureCap << "\tparticleObjectCap:" << parObjectCap << endl;
+                Porous2D::outf << "->\t完成中心点与直径成圆！" << endl;
+                Porous2D::outf << "->\t圆线存储..." << endl;
+                Porous2D::outf << "->\t内存释放！" << endl;
             }
         }
     }
@@ -1736,6 +1989,52 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
     {
 
     }
+}
+
+//Save 3D porous media and export as IGES files
+void Porous2D::SaveAsIGES(NXOpen::Part* workPart)
+{
+    workPart->AssignPermanentName("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-30%porosity\\1111.prt");
+    NXOpen::PartSaveStatus *partSaveStatus1;
+    partSaveStatus1 = workPart->Save(NXOpen::BasePart::SaveComponentsTrue, NXOpen::BasePart::CloseAfterSaveFalse);
+    delete partSaveStatus1;
+
+    NXOpen::IgesCreator *igesCreator1;
+    igesCreator1 = theSession->DexManager()->CreateIgesCreator();
+    igesCreator1->SetExportModelData(true);
+    igesCreator1->SetExportDrawings(true);
+    igesCreator1->SetMapTabCylToBSurf(true);
+    igesCreator1->SetBcurveTol(0.050799999999999998);
+    igesCreator1->SetIdenticalPointResolution(0.001);
+    igesCreator1->SetMaxThreeDMdlSpace(10000.0);
+    igesCreator1->ObjectTypes()->SetCurves(true);
+    igesCreator1->ObjectTypes()->SetSurfaces(true);
+    igesCreator1->ObjectTypes()->SetAnnotations(true);
+    igesCreator1->ObjectTypes()->SetStructures(true);
+    igesCreator1->ObjectTypes()->SetSolids(true);
+    igesCreator1->SetSettingsFile("D:\\Program Files\\Siemens\\NX1899\\iges\\igesexport.def");
+    igesCreator1->SetExportDrawings(false);
+    igesCreator1->ExportSelectionBlock()->SetSelectionScope(NXOpen::ObjectSelector::ScopeSelectedObjects);
+    igesCreator1->ObjectTypes()->SetCurves(false);
+    igesCreator1->ObjectTypes()->SetSurfaces(false);
+    igesCreator1->ObjectTypes()->SetAnnotations(false);
+    igesCreator1->ObjectTypes()->SetStructures(false);
+    igesCreator1->SetMapRevolvedFacesTo(NXOpen::IgesCreator::MapRevolvedFacesOptionBSurfaces);
+    igesCreator1->SetMapCrossHatchTo(NXOpen::IgesCreator::CrossHatchMapEnumSectionArea);
+    igesCreator1->SetBcurveTol(0.050799999999999998);
+    igesCreator1->SetInputFile("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-30%porosity\\_model1.prt");
+    NXOpen::Body *body1(dynamic_cast<NXOpen::Body *>(workPart->Bodies()->FindObject("THICKEN_SHEET(75)")));
+    bool added1;
+    added1 = igesCreator1->ExportSelectionBlock()->SelectionComp()->Add(body1);
+    igesCreator1->SetOutputFile("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-20%porosity\\_model1.igs");
+    igesCreator1->SetFileSaveFlag(false);
+    igesCreator1->SetLayerMask("1-256");
+    igesCreator1->SetDrawingList("");
+    igesCreator1->SetViewList("Top,Front,Right,Back,Bottom,Left,Isometric,Trimetric,User Defined");
+    igesCreator1->SetProcessHoldFlag(true);
+    NXOpen::NXObject *nXObject1;
+    nXObject1 = igesCreator1->Commit();
+    igesCreator1->Destroy();
 }
 
 bool sitesOrdered(const Point2& s1, const Point2& s2)

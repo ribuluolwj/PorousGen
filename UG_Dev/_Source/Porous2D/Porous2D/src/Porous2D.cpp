@@ -198,6 +198,7 @@ void Porous2D::initialize_cb()
         enumGenMethod = dynamic_cast<NXOpen::BlockStyler::Enumeration*>(theDialog->TopBlock()->FindBlock("enumGenMethod"));
         toggleMeshRandom = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleMeshRandom"));
         togglePaper = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePaper"));
+        toggleOutFluid = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleOutFluid"));
         groupSize = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSize"));
         tabControl1 = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControl1"));
         tabPage2 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage2"));
@@ -224,7 +225,6 @@ void Porous2D::initialize_cb()
         integerParticleNumber = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerParticleNumber"));
         doublePorousRatio = dynamic_cast<NXOpen::BlockStyler::DoubleBlock*>(theDialog->TopBlock()->FindBlock("doublePorousRatio"));
         toggleUsePorousRatio = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleUsePorousRatio"));
-        toggleOutFluid = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleOutFluid"));
         tabPageVoronoi = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageVoronoi"));
         integerBSplineOrder = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerBSplineOrder"));
         integerScaleRatio = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerScaleRatio"));
@@ -237,6 +237,7 @@ void Porous2D::initialize_cb()
         buttonGenParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGenParticle"));
         buttonTrimParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonTrimParticle"));
         buttonGen3D = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGen3D"));
+        buttonSaveAsIges = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonSaveAsIges"));
         buttonOnekeyGen = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonOnekeyGen"));
         groupSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSet"));
         togglePrintInfo = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePrintInfo"));
@@ -325,6 +326,10 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
+        else if(block == toggleOutFluid)
+        {
+        //---------Enter your code here-----------
+        }
         else if (block == expressionFaceLength)
         {
             //---------Enter your code here-----------
@@ -385,10 +390,6 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
-        else if(block == toggleOutFluid)
-        {
-        //---------Enter your code here-----------
-        }
         else if(block == integerBSplineOrder)
         {
         //---------Enter your code here-----------
@@ -437,6 +438,12 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
             //--Gen 3D porous
             GenPorous3D(workPart);
          }
+        else if (block == buttonSaveAsIges)
+        {
+        //---------Enter your code here-----------
+            //--Save project and export to IGES files
+            SaveAsIGES(workPart);
+         }
         else if(block == buttonOnekeyGen)
         {
         //---------Enter your code here-----------
@@ -452,6 +459,8 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
             TrimPorousSheet(workPart);
             //--Generage porous 3D
             GenPorous3D(workPart);
+            //--Save project and export to IGES files
+            SaveAsIGES(workPart);
         }
         else if(block == togglePrintInfo)
         {
