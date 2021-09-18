@@ -24,6 +24,7 @@
 #include <cmath>
 #include <ctime>
 #include <random>
+#include <sstream>
 #include "../include/UG-Dev/HuNXOpen.h"
 #include "../include/UG-Dev/uf_all.h"
 #include "../include/Voronoi/Voronoi_all.h"
@@ -107,6 +108,7 @@ public:
     //--Set porous sheet global object
     NXOpen::NXObject* SheetObject;
     NXOpen::NXObject* porousSheetObject;
+    NXOpen::NXObject* thickenSheetObject;
     //--Set porous bodys
     NXOpen::Body* sheetBodys;
     std::vector<NXOpen::Body*> sheetBodysCollector;
@@ -898,15 +900,25 @@ void Porous2D::GenPorous3D(NXOpen::Part* workPart)
         Porous2D::outf << "->\t拉伸..." << endl;
     }
     nXObjectThickenSheet = thickenBuilder1->Commit();
+    Porous2D::thickenSheetObject = nXObjectThickenSheet;
     //----Print process to info window
     if (Porous2D::togglePrintInfo->Value() == true)
     {
         UF_UI_write_listing_window("->\t拉伸完成！\n");
+        //----Find Journalldentifier of sheet body
+        NXOpen::NXString thickenSheetID = Porous2D::thickenSheetObject->JournalIdentifier();
+        string sID = thickenSheetID.GetLocaleText();
+        string sss = "->\tthickenSheetID:\t";
+        string sheetPrintID = sss + sID + "\n";
+        UF_UI_write_listing_window(sheetPrintID.c_str());
     }
     //----Print process to log file
     if (Porous2D::toggleWriteFile->Value() == true)
     {
         Porous2D::outf << "->\t拉伸完成！" << endl;
+        NXOpen::NXString thickenSheetID = Porous2D::thickenSheetObject->JournalIdentifier();
+        string sID = sheetID.GetLocaleText();
+        Porous2D::outf << "->\tthickenSheetID:\t" << sID << endl;
     }
     thickenBuilder1->Destroy();
     //----Print process to info window
@@ -1994,11 +2006,128 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
 //Save 3D porous media and export as IGES files
 void Porous2D::SaveAsIGES(NXOpen::Part* workPart)
 {
-    workPart->AssignPermanentName("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-30%porosity\\1111.prt");
-    NXOpen::PartSaveStatus *partSaveStatus1;
-    partSaveStatus1 = workPart->Save(NXOpen::BasePart::SaveComponentsTrue, NXOpen::BasePart::CloseAfterSaveFalse);
-    delete partSaveStatus1;
-
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->文件保存：\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->文件保存：" << endl;
+    }
+    string workPath = workPart->FullPath().GetLocaleText();
+    string workName = workPart->Name().GetLocaleText();
+    int namePosition = workPath.rfind(workName);
+    stringstream ssNamePosition;
+    ssNamePosition << namePosition;
+    string filePath = workPath.substr(0, namePosition);
+    stringstream ssNewWorkName, ssNewWorkPath;
+    if (Porous2D::togglePaper->Value() == true)
+    {
+        ssNewWorkName
+            << Porous2D::expressionBasisWeight->Value() << "g_m^2-" \
+            << Porous2D::expressionDryContentFinal->Value() << "%-" \
+            << Porous2D::expressionDryContentNow->Value() << "%-" \
+            << Porous2D::expressionLenDensity->Value() << "g_m-" \
+            << Porous2D::expressionCelDiameter->Value() << "m-" \
+            << Porous2D::expressionLenWidRatio->Value() << "ext-" \
+            << Porous2D::expressionComRatio->Value() << "comp-" \
+            << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+        ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+    }
+    else
+    {
+        ssNewWorkName
+            << (std::string)(Porous2D::enumGenMethod->ValueAsString()).GetText() << "-" \
+            << Porous2D::expressionFaceLength->Value() << "mm-" \
+            << Porous2D::expressionFaceWidth->Value() << "mm-" \
+            << Porous2D::expressionParticleSize->Value() << "mm-" \
+            << Porous2D::expressionComRatio->Value() << "comp-" \
+            << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+        ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+    }
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t文件工作路径：\n");
+        UF_UI_write_listing_window(filePath.c_str());
+        UF_UI_write_listing_window("\n");
+        UF_UI_write_listing_window("->\t当前文件名：\n");
+        UF_UI_write_listing_window(workName.c_str());
+        UF_UI_write_listing_window("\n");
+        UF_UI_write_listing_window("->\t保存为：\n");
+        UF_UI_write_listing_window(ssNewWorkPath.str().c_str());
+        UF_UI_write_listing_window("\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t文件工作路径：" << endl;
+        Porous2D::outf << filePath << endl;
+        Porous2D::outf << "->\t当前文件名：" << endl;
+        Porous2D::outf << workName << endl;
+        Porous2D::outf << "->\t保存为：" << endl;
+        Porous2D::outf << ssNewWorkPath.str() << endl;
+    }
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t保存中...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t保存中..." << endl;
+    }
+    bool fileExistJudge;
+    struct stat buffer;
+    fileExistJudge = stat(ssNewWorkPath.str().c_str(), &buffer) == 0;
+    bool msgShow = false;
+    if (fileExistJudge)
+    {
+        //Print length of arcFeatureCollector and particleObject
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t文件已存在，请手动保存！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t文件已存在，请手动保存！" << endl;
+        }
+        msgShow = true;
+    }
+    else
+    {
+        workPart->AssignPermanentName(ssNewWorkPath.str().c_str());
+        NXOpen::PartSaveStatus *partSaveStatus1;
+        partSaveStatus1 = workPart->Save(NXOpen::BasePart::SaveComponentsTrue, NXOpen::BasePart::CloseAfterSaveFalse);
+        //Print length of arcFeatureCollector and particleObject
+        if (Porous2D::togglePrintInfo->Value() == true)
+        {
+            UF_UI_write_listing_window("->\t保存完成！\n");
+            UF_UI_write_listing_window("->\t内存释放！\n");
+        }
+        //----Print process to log file
+        if (Porous2D::toggleWriteFile->Value() == true)
+        {
+            Porous2D::outf << "->\t保存完成！" << endl;
+            Porous2D::outf << "->\t内存释放！\n" << endl;
+        }
+        delete partSaveStatus1;
+    }
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->导出IGES：\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->导出IGES：\n" << endl;
+    }
+    //Export to IGES files
     NXOpen::IgesCreator *igesCreator1;
     igesCreator1 = theSession->DexManager()->CreateIgesCreator();
     igesCreator1->SetExportModelData(true);
@@ -2012,7 +2141,7 @@ void Porous2D::SaveAsIGES(NXOpen::Part* workPart)
     igesCreator1->ObjectTypes()->SetAnnotations(true);
     igesCreator1->ObjectTypes()->SetStructures(true);
     igesCreator1->ObjectTypes()->SetSolids(true);
-    igesCreator1->SetSettingsFile("D:\\Program Files\\Siemens\\NX1899\\iges\\igesexport.def");
+//    igesCreator1->SetSettingsFile("D:\\Program Files\\Siemens\\NX1899\\iges\\igesexport.def");
     igesCreator1->SetExportDrawings(false);
     igesCreator1->ExportSelectionBlock()->SetSelectionScope(NXOpen::ObjectSelector::ScopeSelectedObjects);
     igesCreator1->ObjectTypes()->SetCurves(false);
@@ -2022,19 +2151,58 @@ void Porous2D::SaveAsIGES(NXOpen::Part* workPart)
     igesCreator1->SetMapRevolvedFacesTo(NXOpen::IgesCreator::MapRevolvedFacesOptionBSurfaces);
     igesCreator1->SetMapCrossHatchTo(NXOpen::IgesCreator::CrossHatchMapEnumSectionArea);
     igesCreator1->SetBcurveTol(0.050799999999999998);
-    igesCreator1->SetInputFile("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-30%porosity\\_model1.prt");
-    NXOpen::Body *body1(dynamic_cast<NXOpen::Body *>(workPart->Bodies()->FindObject("THICKEN_SHEET(75)")));
+    igesCreator1->SetInputFile(ssNewWorkPath.str());
+    //----Find Journalldentifier of thicken sheet body
+    NXOpen::NXString thickenSheetID = Porous2D::thickenSheetObject->JournalIdentifier();
+    NXOpen::Body *body1(dynamic_cast<NXOpen::Body *>(workPart->Bodies()->FindObject(thickenSheetID)));
     bool added1;
     added1 = igesCreator1->ExportSelectionBlock()->SelectionComp()->Add(body1);
-    igesCreator1->SetOutputFile("G:\\RPWorkspace\\NumericalCompute\\50g_m^2-94%-20%-015g_m-0028m-6ext-1comp-20%porosity\\_model1.igs");
+    //----Set output file path
+    stringstream ssIgesPath;
+    ssIgesPath << filePath << ssNewWorkName.str() << ".igs";
+    igesCreator1->SetOutputFile(ssIgesPath.str());
     igesCreator1->SetFileSaveFlag(false);
     igesCreator1->SetLayerMask("1-256");
     igesCreator1->SetDrawingList("");
     igesCreator1->SetViewList("Top,Front,Right,Back,Bottom,Left,Isometric,Trimetric,User Defined");
     igesCreator1->SetProcessHoldFlag(true);
     NXOpen::NXObject *nXObject1;
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t导出中...\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t导出中..." << endl;
+    }
     nXObject1 = igesCreator1->Commit();
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t导出完成！\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t导出完成！" << endl;
+    }
     igesCreator1->Destroy();
+    //Print length of arcFeatureCollector and particleObject
+    if (Porous2D::togglePrintInfo->Value() == true)
+    {
+        UF_UI_write_listing_window("->\t内存释放！\n");
+    }
+    //----Print process to log file
+    if (Porous2D::toggleWriteFile->Value() == true)
+    {
+        Porous2D::outf << "->\t内存释放！\n" << endl;
+    }
+    if (msgShow)
+    {
+        uc1601("文件已存在，请手动保存！",1);
+    }
 }
 
 bool sitesOrdered(const Point2& s1, const Point2& s2)
@@ -2342,6 +2510,9 @@ void Porous2D::genVertexPoints(std::vector<Point2>& sites, std::vector<Point2>& 
     UF_UI_write_listing_window("------------------------ diagram info stop -------------------------\n");
     delete diagram;
 }
+
+
+
 #endif //POROUS2D_H_INCLUDED
 
 

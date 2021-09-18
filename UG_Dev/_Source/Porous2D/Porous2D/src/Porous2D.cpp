@@ -301,8 +301,15 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
 //    NXOpen::ListingWindow* listingWindow;
     try
     {
+        string fileName, filePath;
+        fileName = workPart->Name().GetLocaleText();
+        filePath = workPart->FullPath().GetLocaleText();
+        int cutPosition = filePath.rfind(fileName.c_str());
+        stringstream ssFilePath;
+        ssFilePath << filePath.substr(0, cutPosition);
+        Porous2D::nativeFolderBrowser0->SetPath(ssFilePath.str());
         string log = Porous2D::nativeFolderBrowser0->Path().getLocaleText();
-        log = log + "\\log.txt";
+        log = log + "\\" + "GenPorousLog" + ".txt";
         Porous2D::outf.open(log, ios::app);
         time_t now = time(0);
         char* dt = ctime(&now);
