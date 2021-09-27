@@ -1031,7 +1031,7 @@ void Porous2D::GenRandom(NXOpen::Part* workPart)
             associativeArcBuilder1 = workPart->BaseFeatures()->CreateAssociativeArcBuilder(nullNXOpen_Features_AssociativeArc);
             //Get random particles' center points 
             //----Get sheet start point's coordinate
-            NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(pointSheetStart->Point());
+            NXOpen::Point* setPoint1 = workPart->Points()->CreatePoint(Porous2D::pointSheetStart->Point());
             double x0 = setPoint1->Coordinates().X;
             double y0 = setPoint1->Coordinates().Y;
             double z0 = setPoint1->Coordinates().Z;
