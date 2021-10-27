@@ -556,6 +556,7 @@
 #include <NXOpen/Features_HolePackage.hxx>
 #include <NXOpen/Features_HolePackageBuilder.hxx>
 #include <NXOpen/Features_FeatureCollection.hxx>
+#include <NXOpen/Features_PointFeatureBuilder.hxx>
 #include <NXOpen/Features_Feature.hxx>
 #include <NXOpen/PDM_PartBuilder.hxx>
 #include <NXOpen/PDM_DatabaseAttributeManager.hxx>

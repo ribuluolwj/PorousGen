@@ -1612,16 +1612,51 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     NXOpen::Point* circleCorePoint1;
                     circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                    //----Create quarter points
+                    NXOpen::Point* quarterPoint1;
+                    NXOpen::Scalar* scalarX2(NULL);
+                    scalarX2 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY2(NULL);
+                    scalarY2 = workPart->Scalars()->CreateScalar(y + diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ2(NULL);
+                    scalarZ2 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint1 = workPart->Points()->CreatePoint(scalarX2, scalarY2, scalarZ2, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint1->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
+                    NXOpen::Point* quarterPoint2;
+                    NXOpen::Scalar* scalarX3(NULL);
+                    scalarX3 = workPart->Scalars()->CreateScalar(x - diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY3(NULL);
+                    scalarY3 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ3(NULL);
+                    scalarZ3 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint2 = workPart->Points()->CreatePoint(scalarX3, scalarY3, scalarZ3, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint2->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
+                    NXOpen::Point* quarterPoint3;
+                    NXOpen::Scalar* scalarX4(NULL);
+                    scalarX4 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY4(NULL);
+                    scalarY4 = workPart->Scalars()->CreateScalar(y - diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ4(NULL);
+                    scalarZ4 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint3 = workPart->Points()->CreatePoint(scalarX4, scalarY4, scalarZ4, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint3->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
                     //----Print center points coordination of cellulose
                     if (Porous2D::togglePrintInfo->Value() == true)
                     {
                         std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                        UF_UI_write_listing_window(tempString);
+                        std::sprintf(tempString, "->\t[Quarters]\t1/4: [%f\t%f\t%f]\t1/2: [%f\t%f\t%f]\t3/4: [%f\t%f\t%f]\n",scalarX2->Value(),scalarY2->Value(), scalarZ2->Value(), \
+                                           scalarX3->Value(),scalarY3->Value(), scalarZ3->Value(),scalarX4->Value(),scalarY4->Value(), scalarZ4->Value());
                         UF_UI_write_listing_window(tempString);
                     }
                     //----Print process to log file
                     if (Porous2D::toggleWriteFile->Value() == true)
                     {
                         Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                        Porous2D::outf << "->\t[" << "Quarters" << "]\t1/4: [" << scalarX2->Value() << ",\t" << scalarY2->Value() \
+                                                  << ",\t" << scalarZ2->Value() << "]\t1/2: [" << scalarX3->Value()  << ",\t" << scalarY3->Value() \
+                                                  << ",\t" << scalarZ3->Value() << "]\t3/4: [" << scalarX4->Value() << ",\t" << scalarY4->Value() \
+                                                  << ",\t" << scalarZ4->Value() << "]" << endl;
                     }
                     //Set AssociativeArcBuilder parameters
                     //----Create helpPoints for trim section
@@ -1644,6 +1679,26 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     //Create circle particle curves
                     NXOpen::NXObject* nXObjectCircle;
                     nXObjectCircle = associativeArcBuilder1->Commit();
+//                    //Creater circle quarters points
+//                    NXOpen::Features::Feature* nullNXOpen_Features_Feature(NULL);
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder1;
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder2;
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder3;
+//                    pointFeatureBuilder1 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder1->SetPoint(quarterPoint1);
+//                    pointFeatureBuilder2 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder2->SetPoint(quarterPoint2);
+//                    pointFeatureBuilder3 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder3->SetPoint(quarterPoint3);
+//                    NXOpen::NXObject *nXObject1;
+//                    NXOpen::NXObject *nXObject2;
+//                    NXOpen::NXObject *nXObject3;
+//                    nXObject1 = pointFeatureBuilder1->Commit();
+//                    nXObject2 = pointFeatureBuilder2->Commit();
+//                    nXObject3 = pointFeatureBuilder3->Commit();
+//                    pointFeatureBuilder1->Destroy();
+//                    pointFeatureBuilder2->Destroy();
+//                    pointFeatureBuilder3->Destroy();
                     //Pass to global parameters
                     //----Get particle curves' objects
                     Porous2D::particleObject.push_back(nXObjectCircle);
@@ -1903,7 +1958,7 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                             z = zStartPoint;
                         }
                     }
-
+                    //----Create center points
                     NXOpen::Scalar* scalarX1(NULL);
                     scalarX1 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     NXOpen::Scalar* scalarY1(NULL);
@@ -1913,16 +1968,51 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     NXOpen::Point* circleCorePoint1;
                     circleCorePoint1 = workPart->Points()->CreatePoint(scalarX1, scalarY1, scalarZ1, NXOpen::SmartObject::UpdateOptionWithinModeling);
                     Porous2D::centerPointCollector.push_back(circleCorePoint1);
+                    //----Create quarter points
+                    NXOpen::Point* quarterPoint1;
+                    NXOpen::Scalar* scalarX2(NULL);
+                    scalarX2 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY2(NULL);
+                    scalarY2 = workPart->Scalars()->CreateScalar(y + diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ2(NULL);
+                    scalarZ2 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint1 = workPart->Points()->CreatePoint(scalarX2, scalarY2, scalarZ2, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint1->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
+                    NXOpen::Point* quarterPoint2;
+                    NXOpen::Scalar* scalarX3(NULL);
+                    scalarX3 = workPart->Scalars()->CreateScalar(x - diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY3(NULL);
+                    scalarY3 = workPart->Scalars()->CreateScalar(y, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ3(NULL);
+                    scalarZ3 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint2 = workPart->Points()->CreatePoint(scalarX3, scalarY3, scalarZ3, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint2->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
+                    NXOpen::Point* quarterPoint3;
+                    NXOpen::Scalar* scalarX4(NULL);
+                    scalarX4 = workPart->Scalars()->CreateScalar(x, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarY4(NULL);
+                    scalarY4 = workPart->Scalars()->CreateScalar(y - diameter / 2.0, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    NXOpen::Scalar* scalarZ4(NULL);
+                    scalarZ4 = workPart->Scalars()->CreateScalar(z, NXOpen::Scalar::DimensionalityTypeNone, NXOpen::SmartObject::UpdateOptionWithinModeling);
+                    quarterPoint3 = workPart->Points()->CreatePoint(scalarX4, scalarY4, scalarZ4, NXOpen::SmartObject::UpdateOptionWithinModeling);
+//                    quarterPoint3->SetVisibility(NXOpen::SmartObject::VisibilityOptionVisible);
                     //----Print center points coordination of cellulose
                     if (Porous2D::togglePrintInfo->Value() == true)
                     {
                         std::sprintf(tempString, "->\t[%d,%d]\t%f\t%f\t%f\n",i+1,j+1,x,y,z);
+                        UF_UI_write_listing_window(tempString);
+                        std::sprintf(tempString, "->\t[Quarters]\t1/4: [%f\t%f\t%f]\t1/2: [%f\t%f\t%f]\t3/4: [%f\t%f\t%f]\n",scalarX2->Value(),scalarY2->Value(), scalarZ2->Value(), \
+                                           scalarX3->Value(),scalarY3->Value(), scalarZ3->Value(),scalarX4->Value(),scalarY4->Value(), scalarZ4->Value());
                         UF_UI_write_listing_window(tempString);
                     }
                     //----Print process to log file
                     if (Porous2D::toggleWriteFile->Value() == true)
                     {
                         Porous2D::outf << "->\t[" << i + 1 << "," << j + 1 << "]\t" << x << ",\t" << y << ",\t" << z << endl;
+                        Porous2D::outf << "->\t[" << "Quarters" << "]\t1/4: [" << scalarX2->Value() << ",\t" << scalarY2->Value() \
+                                                  << ",\t" << scalarZ2->Value() << "]\t1/2: [" << scalarX3->Value()  << ",\t" << scalarY3->Value() \
+                                                  << ",\t" << scalarZ3->Value() << "]\t3/4: [" << scalarX4->Value() << ",\t" << scalarY4->Value() \
+                                                  << ",\t" << scalarZ4->Value() << "]" << endl;
                     }
                     //Set AssociativeArcBuilder parameters
                     //----Create helpPoints for trim section
@@ -1945,6 +2035,26 @@ void Porous2D::GenHexagon(NXOpen::Part* workPart)
                     //Create circle particle curves
                     NXOpen::NXObject* nXObjectCircle;
                     nXObjectCircle = associativeArcBuilder1->Commit();
+//                    //Creater circle quarters points
+//                    NXOpen::Features::Feature* nullNXOpen_Features_Feature(NULL);
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder1;
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder2;
+//                    NXOpen::Features::PointFeatureBuilder* pointFeatureBuilder3;
+//                    pointFeatureBuilder1 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder1->SetPoint(quarterPoint1);
+//                    pointFeatureBuilder2 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder2->SetPoint(quarterPoint2);
+//                    pointFeatureBuilder3 = workPart->BaseFeatures()->CreatePointFeatureBuilder(nullNXOpen_Features_Feature);
+//                    pointFeatureBuilder3->SetPoint(quarterPoint3);
+//                    NXOpen::NXObject *nXObject1;
+//                    NXOpen::NXObject *nXObject2;
+//                    NXOpen::NXObject *nXObject3;
+//                    nXObject1 = pointFeatureBuilder1->Commit();
+//                    nXObject2 = pointFeatureBuilder2->Commit();
+//                    nXObject3 = pointFeatureBuilder3->Commit();
+//                    pointFeatureBuilder1->Destroy();
+//                    pointFeatureBuilder2->Destroy();
+//                    pointFeatureBuilder3->Destroy();
                     //Pass to global parameters
                     //----Get particle curves' objects
                     Porous2D::particleObject.push_back(nXObjectCircle);
