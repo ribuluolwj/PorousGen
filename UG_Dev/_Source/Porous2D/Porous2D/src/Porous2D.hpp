@@ -143,6 +143,8 @@ public:
     double particleDiameter;
     //Set log file
     ofstream outf;
+    //Set save name
+    //stringstream ssNamePosition;
 
     void GenPorousSheet(NXOpen::Part* workPart);
     void GenParticleCurve(NXOpen::Part* workPart);
@@ -225,6 +227,15 @@ private:
     NXOpen::BlockStyler::FolderSelection* nativeFolderBrowser0;// Block type: NativeFolderBrowser
 };
 
+class NameString {
+    // class members
+public:
+    NameString();
+    ~NameString();
+
+private:
+
+};
 //Generate porous sheets
 void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
 {
@@ -333,13 +344,15 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
             char tempString[256];
             std::sprintf(tempString, "->\t第四点：[x: %f, y: %f, z: %f]\n",setPoint4->Coordinates().X,setPoint4->Coordinates().Y,setPoint4->Coordinates().Z);
             UF_UI_write_listing_window(tempString);
-            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f\n",Porous2D::sheetLength,Porous2D::sheetWidth);
+            std::sprintf(tempString, "->\t片体长：%f;\t片体宽：%f\n",Porous2D::sheetLength,Porous2D::sheetWidth);
             UF_UI_write_listing_window(tempString);
         }
         //----Print process to log file
         if (Porous2D::toggleWriteFile->Value() == true)
         {
             Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << endl;
+            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "\t片体宽：" << Porous2D::sheetWidth << " -->压缩后宽：" << comRatio * Porous2D::sheetWidth << endl;
+            Porous2D::outf << "->\t压缩系数：" <<  comRatio << endl;
         }
         //Create surface object
         NXOpen::NXObject* nXObjectSheet;
@@ -492,7 +505,7 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
             char tempString[256];
             std::sprintf(tempString, "->\t第四点：[x: %f, y: %f, z: %f]\n",setPoint4->Coordinates().X,setPoint4->Coordinates().Y,setPoint4->Coordinates().Z);
             UF_UI_write_listing_window(tempString);
-            std::sprintf(tempString, "->\t片体长：%f; 片体宽：%f -->压缩后宽：%f\n",Porous2D::sheetLength, Porous2D::sheetWidth, comRatio * Porous2D::sheetWidth);
+            std::sprintf(tempString, "->\t片体长：%f;\t片体宽：%f -->压缩后宽：%f\n",Porous2D::sheetLength, Porous2D::sheetWidth, comRatio * Porous2D::sheetWidth);
             UF_UI_write_listing_window(tempString);
             std::sprintf(tempString, "->\t压缩系数：%f\n",comRatio);
             UF_UI_write_listing_window(tempString);
@@ -501,7 +514,7 @@ void Porous2D::GenPorousSheet(NXOpen::Part* workPart)
         if (Porous2D::toggleWriteFile->Value() == true)
         {
             Porous2D::outf << "->\t第四点：[x: " << setPoint4->Coordinates().X << ", y: " << setPoint4->Coordinates().Y << ", z: " << setPoint4->Coordinates().Z << "]" << endl;
-            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "片体宽：" << Porous2D::sheetWidth << " -->压缩后宽：" << comRatio * Porous2D::sheetWidth << endl;
+            Porous2D::outf << "->\t片体长：" <<  Porous2D::sheetLength << "\t片体宽：" << Porous2D::sheetWidth << " -->压缩后宽：" << comRatio * Porous2D::sheetWidth << endl;
             Porous2D::outf << "->\t压缩系数：" <<  comRatio << endl;
         }
         //Create surface object

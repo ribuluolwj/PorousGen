@@ -422,7 +422,39 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         //---------Enter your code here-----------
             if (Porous2D::toggleWriteFile->Value() == true)
             {
-                Porous2D::outf << "->\tLogTime:" << dt << endl;
+                Porous2D::outf << "\n->LogTime:" << dt << endl;
+                string workPath = workPart->FullPath().GetLocaleText();
+                string workName = workPart->Name().GetLocaleText();
+                int namePosition = workPath.rfind(workName);
+                stringstream ssNamePosition;
+                ssNamePosition << namePosition;
+                string filePath = workPath.substr(0, namePosition);
+                stringstream ssNewWorkName, ssNewWorkPath;
+                if (Porous2D::togglePaper->Value() == true)
+                {
+                    ssNewWorkName
+                        << Porous2D::expressionBasisWeight->Value() << "g_m^2-" \
+                        << Porous2D::expressionDryContentFinal->Value() << "%-" \
+                        << Porous2D::expressionDryContentNow->Value() << "%-" \
+                        << Porous2D::expressionLenDensity->Value() << "g_m-" \
+                        << Porous2D::expressionCelDiameter->Value() << "m-" \
+                        << Porous2D::expressionLenWidRatio->Value() << "ext-" \
+                        << Porous2D::expressionComRatio->Value() << "comp-" \
+                        << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+                    ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+                }
+                else
+                {
+                    ssNewWorkName
+                        << (std::string)(Porous2D::enumGenMethod->ValueAsString()).GetText() << "-" \
+                        << Porous2D::expressionFaceLength->Value() << "mm-" \
+                        << Porous2D::expressionFaceWidth->Value() << "mm-" \
+                        << Porous2D::expressionParticleSize->Value() << "mm-" \
+                        << Porous2D::expressionComRatio->Value() << "comp-" \
+                        << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+                    ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+                }
+                Porous2D::outf << "->ProjectName:" << ssNewWorkName.str() << endl;
             }
             //--Genarate sheet porous party
             GenPorousSheet(workPart);
@@ -456,7 +488,39 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         //---------Enter your code here-----------
             if (Porous2D::toggleWriteFile->Value() == true)
             {
-                Porous2D::outf << "->\tLogTime:" << dt << endl;
+                Porous2D::outf << "\n->LogTime:" << dt << endl;
+                string workPath = workPart->FullPath().GetLocaleText();
+                string workName = workPart->Name().GetLocaleText();
+                int namePosition = workPath.rfind(workName);
+                stringstream ssNamePosition;
+                ssNamePosition << namePosition;
+                string filePath = workPath.substr(0, namePosition);
+                stringstream ssNewWorkName, ssNewWorkPath;
+                if (Porous2D::togglePaper->Value() == true)
+                {
+                    ssNewWorkName
+                        << Porous2D::expressionBasisWeight->Value() << "g_m^2-" \
+                        << Porous2D::expressionDryContentFinal->Value() << "%-" \
+                        << Porous2D::expressionDryContentNow->Value() << "%-" \
+                        << Porous2D::expressionLenDensity->Value() << "g_m-" \
+                        << Porous2D::expressionCelDiameter->Value() << "m-" \
+                        << Porous2D::expressionLenWidRatio->Value() << "ext-" \
+                        << Porous2D::expressionComRatio->Value() << "comp-" \
+                        << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+                    ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+                }
+                else
+                {
+                    ssNewWorkName
+                        << (std::string)(Porous2D::enumGenMethod->ValueAsString()).GetText() << "-" \
+                        << Porous2D::expressionFaceLength->Value() << "mm-" \
+                        << Porous2D::expressionFaceWidth->Value() << "mm-" \
+                        << Porous2D::expressionParticleSize->Value() << "mm-" \
+                        << Porous2D::expressionComRatio->Value() << "comp-" \
+                        << Porous2D::doublePorousRatio->Value() * 100.0 << "%porosity";
+                    ssNewWorkPath << filePath << ssNewWorkName.str() << ".prt";
+                }
+                Porous2D::outf << "->ProjectName:" << ssNewWorkName.str() << endl;
             }
             //--Genarate sheet porous party
             GenPorousSheet(workPart);
