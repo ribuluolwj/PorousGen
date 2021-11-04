@@ -2657,4 +2657,3 @@ void Porous2D::genVertexPoints(std::vector<Point2>& sites, std::vector<Point2>& 
 //            (*vertexY).push_back(p1.y);
 //        }
 //    }
-
