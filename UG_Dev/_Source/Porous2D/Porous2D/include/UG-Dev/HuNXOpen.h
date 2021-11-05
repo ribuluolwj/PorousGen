@@ -135,6 +135,7 @@
 #include <NXOpen/BlockStylerDebugSession.hxx>
 #include <NXOpen/BlockStyler_CompositeBlock.hxx>
 #include <NXOpen/BlockStyler_ListBox.hxx>
+#include <NXOpen/BlockStyler_Separator.hxx>
 #include <NXOpen/BlockStyler_SetList.hxx>
 #include <NXOpen/BlockStyler_TreeListMenu.hxx>
 #include <NXOpen/BlockStyler_Wizard.hxx>

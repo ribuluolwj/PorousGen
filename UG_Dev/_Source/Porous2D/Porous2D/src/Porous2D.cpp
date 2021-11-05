@@ -196,48 +196,51 @@ void Porous2D::initialize_cb()
         enumParticleShape = dynamic_cast<NXOpen::BlockStyler::Enumeration*>(theDialog->TopBlock()->FindBlock("enumParticleShape"));
         groupGenMethod = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupGenMethod"));
         enumGenMethod = dynamic_cast<NXOpen::BlockStyler::Enumeration*>(theDialog->TopBlock()->FindBlock("enumGenMethod"));
-        toggleMeshRandom = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleMeshRandom"));
         togglePaper = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePaper"));
-        toggleOutFluid = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleOutFluid"));
-        groupSize = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSize"));
-        tabControl1 = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControl1"));
-        tabPage2 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage2"));
-        expressionFaceLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceLength"));
-        expressionFaceWidth = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceWidth"));
-        expressionParticleSize = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionParticleSize"));
-        tabPage3 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage3"));
-        expressionBasisWeight = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionBasisWeight"));
-        expressionDryContentFinal = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentFinal"));
-        expressionDryContentNow = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentNow"));
-        tabPage4 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage4"));
-        expressionLenDensity = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenDensity"));
-        expressionCelDiameter = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelDiameter"));
-        expressionCelLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelLength"));
-        expressionLenWidRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenWidRatio"));
+        groupParametersSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupParametersSet"));
+        tabPage3D = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage3D"));
+        toggleUse3D = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleUse3D"));
         expressionSheetLen = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionSheetLen"));
+        tabPageGlobalSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageGlobalSet"));
+        doublePorousRatio = dynamic_cast<NXOpen::BlockStyler::DoubleBlock*>(theDialog->TopBlock()->FindBlock("doublePorousRatio"));
         expressionComRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionComRatio"));
+        toggleSymBoundary = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleSymBoundary"));
+        toggleOutFluid = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleOutFluid"));
+        tabControlWay = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControlWay"));
+        tabPage5 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage5"));
+        tabPageBaseSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageBaseSet"));
         expressionFaceLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceLength"));
         expressionFaceWidth = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionFaceWidth"));
         expressionParticleSize = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionParticleSize"));
-        groupParticle = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupParticle"));
-        tabControl = dynamic_cast<NXOpen::BlockStyler::TabControl*>(theDialog->TopBlock()->FindBlock("tabControl"));
-        tabPage = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage"));
-        integerParticleNumber = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerParticleNumber"));
-        doublePorousRatio = dynamic_cast<NXOpen::BlockStyler::DoubleBlock*>(theDialog->TopBlock()->FindBlock("doublePorousRatio"));
         toggleUsePorousRatio = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleUsePorousRatio"));
+        tabPageSqrHex = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageSqrHex"));
+        expressionRowGap = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionRowGap"));
+        expressionColumGap = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionColumGap"));
+        tabPageRandom = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageRandom"));
+        integerParticleNumber = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerParticleNumber"));
+        toggleMeshRandom = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleMeshRandom"));
         tabPageVoronoi = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageVoronoi"));
         integerBSplineOrder = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerBSplineOrder"));
         integerScaleRatio = dynamic_cast<NXOpen::BlockStyler::IntegerBlock*>(theDialog->TopBlock()->FindBlock("integerScaleRatio"));
         toggleScale = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("toggleScale"));
-        tabPage1 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage1"));
-        expressionRowGap = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionRowGap"));
-        expressionColumGap = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionColumGap"));
+        tabPage8 = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPage8"));
+        tabPageFibreSize = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageFibreSize"));
+        expressionLenDensity = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenDensity"));
+        expressionCelDiameter = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelDiameter"));
+        expressionCelLength = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionCelLength"));
+        expressionLenWidRatio = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionLenWidRatio"));
+        tabPagePaperParameters = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPagePaperParameters"));
+        expressionBasisWeight = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionBasisWeight"));
+        expressionDryContentFinal = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentFinal"));
+        expressionDryContentNow = dynamic_cast<NXOpen::BlockStyler::ExpressionBlock*>(theDialog->TopBlock()->FindBlock("expressionDryContentNow"));
         groupOption = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupOption"));
+        tabPageDemarcatingOp = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("tabPageDemarcatingOp"));
         buttonGenSheet = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGenSheet"));
         buttonGenParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGenParticle"));
         buttonTrimParticle = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonTrimParticle"));
         buttonGen3D = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonGen3D"));
         buttonSaveAsIges = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonSaveAsIges"));
+        separator0 = dynamic_cast<NXOpen::BlockStyler::Separator*>(theDialog->TopBlock()->FindBlock("separator0"));
         buttonOnekeyGen = dynamic_cast<NXOpen::BlockStyler::Button*>(theDialog->TopBlock()->FindBlock("buttonOnekeyGen"));
         groupSet = dynamic_cast<NXOpen::BlockStyler::Group*>(theDialog->TopBlock()->FindBlock("groupSet"));
         togglePrintInfo = dynamic_cast<NXOpen::BlockStyler::Toggle*>(theDialog->TopBlock()->FindBlock("togglePrintInfo"));
@@ -313,19 +316,15 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         Porous2D::outf.open(log, ios::app);
         time_t now = time(0);
         char* dt = ctime(&now);
-        if (block == pointSheetStart)
+        if(block == pointSheetStart)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == enumParticleShape)
+        else if(block == enumParticleShape)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == enumGenMethod)
-        {
-            //---------Enter your code here-----------
-        }
-        else if(block == toggleMeshRandom)
+        else if(block == enumGenMethod)
         {
         //---------Enter your code here-----------
         }
@@ -333,33 +332,73 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
+        else if(block == toggleUse3D)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionSheetLen)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == doublePorousRatio)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == expressionComRatio)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == toggleSymBoundary)
+        {
+        //---------Enter your code here-----------
+        }
         else if(block == toggleOutFluid)
         {
         //---------Enter your code here-----------
         }
-        else if (block == expressionFaceLength)
+        else if(block == expressionFaceLength)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == expressionFaceWidth)
+        else if(block == expressionFaceWidth)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == expressionParticleSize)
+        else if(block == expressionParticleSize)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == expressionBasisWeight)
+        else if(block == toggleUsePorousRatio)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == expressionDryContentFinal)
+        else if(block == expressionRowGap)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
         }
-        else if (block == expressionDryContentNow)
+        else if(block == expressionColumGap)
         {
-            //---------Enter your code here-----------
+        //---------Enter your code here-----------
+        }
+        else if(block == integerParticleNumber)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == toggleMeshRandom)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == integerBSplineOrder)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == integerScaleRatio)
+        {
+        //---------Enter your code here-----------
+        }
+        else if(block == toggleScale)
+        {
+        //---------Enter your code here-----------
         }
         else if(block == expressionLenDensity)
         {
@@ -377,43 +416,15 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
         {
         //---------Enter your code here-----------
         }
-        else if (block == expressionSheetLen)
-        {
-            //---------Enter your code here-----------
-        }
-        else if(block == expressionComRatio)
+        else if(block == expressionBasisWeight)
         {
         //---------Enter your code here-----------
         }
-        else if(block == integerParticleNumber)
+        else if(block == expressionDryContentFinal)
         {
         //---------Enter your code here-----------
         }
-        else if(block == doublePorousRatio)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == toggleUsePorousRatio)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == integerBSplineOrder)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == integerScaleRatio)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == toggleScale)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == expressionRowGap)
-        {
-        //---------Enter your code here-----------
-        }
-        else if(block == expressionColumGap)
+        else if(block == expressionDryContentNow)
         {
         //---------Enter your code here-----------
         }
@@ -483,6 +494,10 @@ int Porous2D::update_cb(NXOpen::BlockStyler::UIBlock* block)
             //--Save project and export to IGES files
             SaveAsIGES(workPart);
          }
+         else if(block == separator0)
+        {
+        //---------Enter your code here-----------
+        }
         else if(block == buttonOnekeyGen)
         {
         //---------Enter your code here-----------
